@@ -25,16 +25,40 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.barriosmartfront.data.auth.AuthService
+import com.example.barriosmartfront.data.auth.DataStoreTokenStore
+import com.example.barriosmartfront.data.auth.UsersService
+import com.example.barriosmartfront.data.remote.ApiClient
+import com.example.barriosmartfront.data.repositories.AuthRepository
 import com.example.barriosmartfront.ui.theme.SeguridadTheme
 
 class RegisterActivity : ComponentActivity() {
+
+    private val tokenStore by lazy { DataStoreTokenStore(applicationContext) }
+
+    private val retrofit by lazy {
+        ApiClient.create(
+            baseUrl = "http://10.0.2.2:8000/", tokenStore = tokenStore
+        )
+    }
+
+    private val authService by lazy { retrofit.create(AuthService::class.java) }
+    private val usersService by lazy { retrofit.create(UsersService::class.java) }
+    private val repo by lazy { AuthRepository(authService, usersService, tokenStore) }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
             SeguridadTheme {
-                RegisterRoute(
-                    onBackToLogin = { finish() } // go back AFTER snackbar
+                val vm: RegisterViewModel = viewModel(factory = object : ViewModelProvider.Factory {
+                    override fun <T : ViewModel> create(modelClass: Class<T>): T {
+                        @Suppress("UNCHECKED_CAST") return RegisterViewModel(repo) as T
+                    }
+                })
+                RegisterRoute(vm = vm, onBackToLogin = { finish() } // go back AFTER snackbar
                 )
             }
         }
@@ -43,8 +67,7 @@ class RegisterActivity : ComponentActivity() {
 
 @Composable
 fun RegisterRoute(
-    vm: RegisterViewModel = viewModel(),
-    onBackToLogin: () -> Unit
+    vm: RegisterViewModel = viewModel(), onBackToLogin: () -> Unit
 ) {
     val s by vm.state
     val focus = LocalFocusManager.current
@@ -70,12 +93,10 @@ fun RegisterRoute(
         snackbarHost = {
             SnackbarHost(hostState = snackbarHostState) { data ->
                 Snackbar(
-                    snackbarData = data,
-                    shape = MaterialTheme.shapes.medium
+                    snackbarData = data, shape = MaterialTheme.shapes.medium
                 )
             }
-        }
-    ) { innerPadding ->
+        }) { innerPadding ->
         Box(
             modifier = Modifier
                 .fillMaxSize()
@@ -83,8 +104,7 @@ fun RegisterRoute(
                 .background(
                     Brush.verticalGradient(
                         listOf(
-                            MaterialTheme.colorScheme.surface,
-                            MaterialTheme.colorScheme.background
+                            MaterialTheme.colorScheme.surface, MaterialTheme.colorScheme.background
                         )
                     )
                 )
@@ -134,8 +154,7 @@ fun RegisterRoute(
                             shape = MaterialTheme.shapes.medium,
                             modifier = Modifier.fillMaxWidth(),
                             keyboardOptions = KeyboardOptions(
-                                keyboardType = KeyboardType.Email,
-                                imeAction = ImeAction.Next
+                                keyboardType = KeyboardType.Email, imeAction = ImeAction.Next
                             )
                         )
 
@@ -149,8 +168,7 @@ fun RegisterRoute(
                             shape = MaterialTheme.shapes.medium,
                             modifier = Modifier.fillMaxWidth(),
                             keyboardOptions = KeyboardOptions(
-                                keyboardType = KeyboardType.Phone,
-                                imeAction = ImeAction.Next
+                                keyboardType = KeyboardType.Phone, imeAction = ImeAction.Next
                             )
                         )
 
@@ -174,8 +192,7 @@ fun RegisterRoute(
                                 }
                             },
                             keyboardOptions = KeyboardOptions(
-                                keyboardType = KeyboardType.Password,
-                                imeAction = ImeAction.Next
+                                keyboardType = KeyboardType.Password, imeAction = ImeAction.Next
                             )
                         )
 
@@ -199,8 +216,7 @@ fun RegisterRoute(
                                 }
                             },
                             keyboardOptions = KeyboardOptions(
-                                keyboardType = KeyboardType.Password,
-                                imeAction = ImeAction.Done
+                                keyboardType = KeyboardType.Password, imeAction = ImeAction.Done
                             ),
                             keyboardActions = KeyboardActions(onDone = { focus.clearFocus() })
                         )
@@ -230,8 +246,7 @@ fun RegisterRoute(
                         ) {
                             if (s.isLoading) {
                                 CircularProgressIndicator(
-                                    strokeWidth = 2.dp,
-                                    modifier = Modifier.size(18.dp)
+                                    strokeWidth = 2.dp, modifier = Modifier.size(18.dp)
                                 )
                                 Spacer(Modifier.width(8.dp))
                                 Text("Creando…")

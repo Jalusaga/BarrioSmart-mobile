@@ -3,7 +3,7 @@ package com.example.barriosmartfront.ui.register
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.barriosmartfront.data.AuthRepository
+import com.example.barriosmartfront.data.repositories.AuthRepository
 import kotlinx.coroutines.launch
 
 data class RegisterUiState(
@@ -24,11 +24,25 @@ class RegisterViewModel(
     var state = mutableStateOf(RegisterUiState())
         private set
 
-    fun updateFullName(v: String) { state.value = state.value.copy(fullName = v) }
-    fun updateEmail(v: String)    { state.value = state.value.copy(email = v) }
-    fun updatePhone(v: String)    { state.value = state.value.copy(phone = v) }
-    fun updatePassword(v: String) { state.value = state.value.copy(password = v) }
-    fun updateConfirm(v: String)  { state.value = state.value.copy(confirm = v) }
+    fun updateFullName(v: String) {
+        state.value = state.value.copy(fullName = v)
+    }
+
+    fun updateEmail(v: String) {
+        state.value = state.value.copy(email = v)
+    }
+
+    fun updatePhone(v: String) {
+        state.value = state.value.copy(phone = v)
+    }
+
+    fun updatePassword(v: String) {
+        state.value = state.value.copy(password = v)
+    }
+
+    fun updateConfirm(v: String) {
+        state.value = state.value.copy(confirm = v)
+    }
 
     private fun validate(): String? {
         val s = state.value
@@ -55,20 +69,18 @@ class RegisterViewModel(
                 email = state.value.email.trim(),
                 phone = state.value.phone.trim(),
                 password = state.value.password,
-                autoLogin = true  // login automático tras registrar
+                autoLogin = false  // login automático tras registrar
             )
 
-            res
-                .onSuccess {
-                    state.value = state.value.copy(isLoading = false, success = true)
-                    onSuccess()
-                }
-                .onFailure { e ->
-                    state.value = state.value.copy(
-                        isLoading = false,
-                        error = e.message ?: "No se pudo registrar. Intenta más tarde."
-                    )
-                }
+            res.onSuccess {
+                state.value = state.value.copy(isLoading = false, success = true)
+                onSuccess()
+            }.onFailure { e ->
+                state.value = state.value.copy(
+                    isLoading = false,
+                    error = e.message ?: "No se pudo registrar. Intenta más tarde."
+                )
+            }
         }
     }
 }

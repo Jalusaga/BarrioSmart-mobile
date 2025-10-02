@@ -1,7 +1,9 @@
 package com.example.barriosmartfront.data.auth
 
-import com.example.barriosmartfront.data.network.dto.RegisterRequest
-import com.example.barriosmartfront.data.network.dto.RegisterResponse
+import com.example.barriosmartfront.data.dto.auth.LoginRequest
+import com.example.barriosmartfront.data.dto.auth.RegisterRequest
+import com.example.barriosmartfront.data.dto.auth.RegisterResponse
+import com.example.barriosmartfront.data.dto.auth.TokenResponse
 import retrofit2.http.Body
 import retrofit2.http.POST
 
@@ -12,29 +14,6 @@ interface AuthService {
 
 interface UsersService {
     @POST("users/")
-    suspend fun register(@Body body: RegisterRequest): UserResponse
+    suspend fun register(@Body body: RegisterRequest): RegisterResponse
 }
 
-data class LoginRequest(val email: String, val password: String)
-data class TokenResponse(val access_token: String, val token_type: String)
-
-data class RegisterRequest(
-    val full_name: String,
-    val email: String,
-    val phone: String?,
-    val password: String,
-    val is_admin: Boolean = false,
-    val is_active: Boolean = true
-)
-
-// Alineado al backend (UserResponse de FastAPI)
-data class UserResponse(
-    val id: Long,
-    val full_name: String,
-    val email: String?,
-    val phone: String?,
-    val is_admin: Boolean,
-    val is_active: Boolean,
-    val created_at: String,
-    val updated_at: String
-)

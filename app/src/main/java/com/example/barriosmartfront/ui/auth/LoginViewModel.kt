@@ -5,11 +5,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.barriosmartfront.data.AuthRepository
-import com.example.barriosmartfront.data.auth.AuthService
-import com.example.barriosmartfront.data.auth.ITokenStore
-import com.example.barriosmartfront.data.auth.LoginRequest
-import kotlinx.coroutines.delay
+import com.example.barriosmartfront.data.repositories.AuthRepository
 import kotlinx.coroutines.launch
 
 // ---- ViewModel (estado simple) ----
@@ -26,8 +22,13 @@ class LoginViewModel(
     var error by mutableStateOf<String?>(null)
         private set
 
-    fun updateEmail(v: String) { email = v }
-    fun updatePassword(v: String) { password = v }
+    fun updateEmail(v: String) {
+        email = v
+    }
+
+    fun updatePassword(v: String) {
+        password = v
+    }
 
     fun doLogin(onSuccess: () -> Unit) = viewModelScope.launch {
         error = null
