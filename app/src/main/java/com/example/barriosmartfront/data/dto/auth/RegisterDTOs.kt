@@ -1,5 +1,5 @@
 // data/network/dto/RegisterDTOs.kt
-package com.example.barriosmartfront.data.network.dto
+package com.example.barriosmartfront.data.dto.auth
 
 data class RegisterRequest(
     val full_name: String,

@@ -1,13 +1,13 @@
-// data/AuthRepository.kt
-package com.example.barriosmartfront.data
+package com.example.barriosmartfront.data.repositories
 
 import com.example.barriosmartfront.data.auth.AuthService
 import com.example.barriosmartfront.data.auth.ITokenStore
-import com.example.barriosmartfront.data.auth.LoginRequest
-import com.example.barriosmartfront.data.auth.UserResponse
 import com.example.barriosmartfront.data.auth.UsersService
-import com.example.barriosmartfront.data.network.dto.RegisterRequest
-
+import com.example.barriosmartfront.data.dto.auth.LoginRequest
+import com.example.barriosmartfront.data.dto.auth.RegisterRequest
+import com.example.barriosmartfront.data.dto.auth.RegisterResponse
+import retrofit2.HttpException
+import java.io.IOException
 
 class AuthRepository(
     private val authService: AuthService,
@@ -28,7 +28,7 @@ class AuthRepository(
         phone: String?,
         password: String,
         autoLogin: Boolean = true
-    ): Result<UserResponse> = safeApi {
+    ): Result<RegisterResponse> = safeApi {
         val created = usersService.register(
             RegisterRequest(
                 full_name = fullName,
@@ -40,7 +40,6 @@ class AuthRepository(
             )
         )
         if (autoLogin) {
-            // intenta login con las mismas credenciales
             runCatching { login(email, password).getOrThrow() }
         }
         created
@@ -55,7 +54,7 @@ class AuthRepository(
     private inline fun <T> safeApi(block: () -> T): Result<T> {
         return try {
             Result.success(block())
-        } catch (e: retrofit2.HttpException) {
+        } catch (e: HttpException) {
             val msg = when (e.code()) {
                 400, 401 -> "Credenciales o datos inválidos."
                 409      -> "Conflicto (posible email ya registrado)."
@@ -64,11 +63,10 @@ class AuthRepository(
                 else -> "HTTP ${e.code()}."
             }
             Result.failure(RuntimeException(msg, e))
-        } catch (e: java.io.IOException) {
+        } catch (e: IOException) {
             Result.failure(RuntimeException("Sin conexión. Intenta de nuevo.", e))
         } catch (e: Exception) {
             Result.failure(RuntimeException("Ocurrió un error.", e))
         }
     }
 }
-

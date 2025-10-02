@@ -34,10 +34,10 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.example.barriosmartfront.data.AuthRepository
+import com.example.barriosmartfront.data.repositories.AuthRepository
 import com.example.barriosmartfront.data.auth.AuthService
 import com.example.barriosmartfront.data.auth.DataStoreTokenStore
-import com.example.barriosmartfront.data.auth.ITokenStore
+
 import com.example.barriosmartfront.data.auth.UsersService
 import com.example.barriosmartfront.data.remote.ApiClient
 import com.example.barriosmartfront.ui.home.HomeActivity
@@ -52,38 +52,28 @@ class LoginActivity : ComponentActivity() {
 
     private val retrofit by lazy {
         ApiClient.create(
-            baseUrl = "http://10.0.2.2:8000/",
-            tokenStore = tokenStore
+            baseUrl = "http://10.0.2.2:8000/", tokenStore = tokenStore
         )
     }
 
     private val authService by lazy { retrofit.create(AuthService::class.java) }
     private val usersService by lazy { retrofit.create(UsersService::class.java) }
-
     private val repo by lazy { AuthRepository(authService, usersService, tokenStore) }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
             SeguridadTheme {
-                // podrías inyectar el repo en el VM con un factory si prefieres
-                val vm: LoginViewModel = viewModel(
-                    factory = object : ViewModelProvider.Factory {
-                        override fun <T : ViewModel> create(modelClass: Class<T>): T {
-                            @Suppress("UNCHECKED_CAST")
-                            return LoginViewModel(repo) as T
-                        }
+                val vm: LoginViewModel = viewModel(factory = object : ViewModelProvider.Factory {
+                    override fun <T : ViewModel> create(modelClass: Class<T>): T {
+                        @Suppress("UNCHECKED_CAST") return LoginViewModel(repo) as T
                     }
-                )
+                })
                 LoginRoute(
-                    vm = vm,
-                    authService = authService,
-                    tokenStore = tokenStore,
-                    onLogin = { _, _ ->
+                    vm = vm, onLogin = { _, _ ->
                         startActivity(Intent(this, HomeActivity::class.java))
                         finish()
-                    }
-                )
+                    })
             }
         }
     }
@@ -92,10 +82,7 @@ class LoginActivity : ComponentActivity() {
 // ---- Navigation-less route ----
 @Composable
 fun LoginRoute(
-    vm: LoginViewModel = viewModel(),
-    authService: AuthService,
-    tokenStore: ITokenStore,
-    onLogin: (String, String) -> Unit
+    vm: LoginViewModel = viewModel(), onLogin: (String, String) -> Unit
 ) {
     val context = androidx.compose.ui.platform.LocalContext.current
     val focus = LocalFocusManager.current
@@ -107,8 +94,7 @@ fun LoginRoute(
             .background(
                 Brush.verticalGradient(
                     listOf(
-                        SurfaceSoft,
-                        Color.White
+                        SurfaceSoft, Color.White
                     )
                 )
             )
@@ -172,8 +158,7 @@ fun LoginRoute(
                         label = { Text("Correo electrónico") },
                         singleLine = true,
                         keyboardOptions = KeyboardOptions(
-                            keyboardType = KeyboardType.Email,
-                            imeAction = ImeAction.Next
+                            keyboardType = KeyboardType.Email, imeAction = ImeAction.Next
                         ),
                         leadingIcon = { Icon(Icons.Default.Mail, contentDescription = null) },
                         shape = MaterialTheme.shapes.medium,
@@ -190,8 +175,7 @@ fun LoginRoute(
                         singleLine = true,
                         visualTransformation = if (show) VisualTransformation.None else PasswordVisualTransformation(),
                         keyboardOptions = KeyboardOptions(
-                            keyboardType = KeyboardType.Password,
-                            imeAction = ImeAction.Done
+                            keyboardType = KeyboardType.Password, imeAction = ImeAction.Done
                         ),
                         keyboardActions = KeyboardActions(onDone = {
                             focus.clearFocus()
@@ -228,11 +212,9 @@ fun LoginRoute(
                                     doLogin(
                                         onSuccess = {
                                             onLogin(
-                                                email,
-                                                password
+                                                email, password
                                             )
-                                        }
-                                    )
+                                        })
                                 }
                             }
                         },
@@ -242,8 +224,7 @@ fun LoginRoute(
                     ) {
                         if (vm.isLoading) {
                             CircularProgressIndicator(
-                                strokeWidth = 2.dp,
-                                modifier = Modifier.size(18.dp)
+                                strokeWidth = 2.dp, modifier = Modifier.size(18.dp)
                             )
                             Spacer(Modifier.width(8.dp))
                             Text("Ingresando…")
@@ -260,8 +241,7 @@ fun LoginRoute(
                                     com.example.barriosmartfront.ui.register.RegisterActivity::class.java
                                 )
                             )
-                        },
-                        modifier = Modifier.align(Alignment.CenterHorizontally)
+                        }, modifier = Modifier.align(Alignment.CenterHorizontally)
                     ) { Text("¿No tienes cuenta? Regístrate") }
 
                     TextButton(
