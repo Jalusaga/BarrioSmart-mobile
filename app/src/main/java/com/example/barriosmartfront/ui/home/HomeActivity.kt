@@ -44,6 +44,7 @@ import com.example.barriosmartfront.data.dto.auth.NavItem
 import com.example.barriosmartfront.data.remote.ApiClient
 import com.example.barriosmartfront.ui.authorities.AuthoritiesActivity
 import com.example.barriosmartfront.ui.community.CommunityActivity
+import com.example.barriosmartfront.ui.report.ReportActivity
 
 import com.example.barriosmartfront.ui.theme.SeguridadTheme
 import com.example.barriosmartfront.ui.theme.SurfaceSoft
@@ -74,9 +75,6 @@ class HomeActivity : ComponentActivity() {
     }
 }
 
-
-
-// ---- Navigation-less route ----
 @Composable
 fun HomeRoute(
     onButtonClick: () -> Unit
@@ -197,6 +195,9 @@ fun HomeRoute(
                                 context.startActivity(intent)
                             }else if (item.title == "Comunidades") {
                                 val intent = Intent(context, CommunityActivity::class.java)
+                                context.startActivity(intent)
+                            }else if(item.title == "Reportes"){
+                                val intent = Intent(context, ReportActivity::class.java)
                                 context.startActivity(intent)
                             }
                         }

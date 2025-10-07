@@ -52,6 +52,12 @@
             android:theme="@style/Theme.BarrioSmartFront"
             android:windowSoftInputMode="adjustResize" />
         <activity
+            android:name=".ui.report.ReportActivity"
+            android:exported="true"
+            android:label="Reportes"
+            android:theme="@style/Theme.BarrioSmartFront"
+            android:windowSoftInputMode="adjustResize" />
+        <activity
             android:name=".ui.auth.LoginActivity"
             android:exported="true"
             android:label="@string/title_activity_login"

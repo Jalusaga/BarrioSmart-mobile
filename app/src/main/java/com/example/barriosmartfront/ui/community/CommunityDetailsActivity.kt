@@ -28,7 +28,7 @@ import androidx.compose.ui.unit.dp
 import com.example.barriosmartfront.ui.member.Member
 import com.example.barriosmartfront.ui.member.MiembroCard
 import com.example.barriosmartfront.ui.report.Report
-import com.example.barriosmartfront.ui.report.ReporteCard
+import com.example.barriosmartfront.ui.report.ReportCard
 import com.example.barriosmartfront.ui.theme.SmartTopAppBar
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
@@ -63,9 +63,9 @@ class CommunityDetailsActivity : ComponentActivity() {
         )
 
         val sampleReports = listOf(
-            Report("Actividad sospechosa en la plaza", "Actividad Sospechosa", "María González", "15/3/2024 a las 10:30", ReportStatus.PENDIENTE),
-            Report("Robo en tienda local", "Robo", "Juan Pérez", "14/3/2024 a las 15:45", ReportStatus.APROBADO),
-            Report("Ruido excesivo en la noche", "Ruido Excesivo", "Ana López", "13/3/2024 a las 22:15", ReportStatus.APROBADO),
+            Report("Actividad sospechosa en la plaza", "Actividad Sospechosa", "María González", "15/3/2024 a las 10:30", ReportStatus.PENDIENTE, Community()),
+            Report("Robo en tienda local", "Robo", "Juan Pérez", "14/3/2024 a las 15:45", ReportStatus.APROBADO, Community()),
+            Report("Ruido excesivo en la noche", "Ruido Excesivo", "Ana López", "13/3/2024 a las 22:15", ReportStatus.APROBADO, Community()),
         )
 
         val community = Community(1, 5, "Barrio Centro", "Comunidad del centro histórico de la ciudad con gran actividad comercial y residencial", true,  isJoined = false) // Reemplaza con una llamada a tu ViewModel/Repository
@@ -281,7 +281,7 @@ fun TabReportesRecientes(reports: List<Report>, onViewAllReports: () -> Unit) {
         )
 
         reports.forEach { report ->
-            ReporteCard(report)
+            ReportCard(report)
         }
 
         Spacer(Modifier.height(16.dp))
