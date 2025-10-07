@@ -28,9 +28,21 @@
             android:theme="@style/Theme.BarrioSmartFront"
             android:windowSoftInputMode="adjustResize" />
         <activity
-            android:name=".ui.authorities.ContactActivity"
+            android:name=".ui.authorities.AuthoritiesActivity"
             android:exported="true"
             android:label="Contacto Autoridades"
+            android:theme="@style/Theme.BarrioSmartFront"
+            android:windowSoftInputMode="adjustResize" />
+        <activity
+            android:name=".ui.community.CommunityActivity"
+            android:exported="true"
+            android:label="Comunidades"
+            android:theme="@style/Theme.BarrioSmartFront"
+            android:windowSoftInputMode="adjustResize" />
+        <activity
+            android:name=".ui.community.CommunityDetailsActivity"
+            android:exported="true"
+            android:label="Detalles Comunidad"
             android:theme="@style/Theme.BarrioSmartFront"
             android:windowSoftInputMode="adjustResize" />
         <activity

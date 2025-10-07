@@ -8,7 +8,6 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Call
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.LocalHospital
@@ -19,50 +18,62 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.example.barriosmartfront.data.auth.DataStoreTokenStore
-import com.example.barriosmartfront.data.remote.ApiClient
+import com.example.barriosmartfront.ui.theme.ScreenHeader
 import com.example.barriosmartfront.ui.theme.SeguridadTheme
+import com.example.barriosmartfront.ui.theme.SmartTopAppBar
 
 
-data class ContactInfo(
-    val title: String,
-    val phone: String,
-    val description: String,
-    val availability: String,
-    val backgroundColor: Color,
-    val icon: ImageVector,
-    val iconColor: Color
-)
-
-
-class ContactActivity : ComponentActivity() {
+class AuthoritiesActivity : ComponentActivity() {
     private val tokenStore by lazy { DataStoreTokenStore(applicationContext) }
-
-    private val retrofit by lazy {
-        ApiClient.create(
-            baseUrl = "http://10.0.2.2:8000/", tokenStore = tokenStore
-        )
-    }
-
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        val authorities = listOf(
+            Authority(
+                title = "Policía Nacional",
+                phone = "2586-4000",
+                description = "Reportes de crímenes y situaciones que requieren intervención policial",
+                availability = "Disponible 24/7",
+                backgroundColor = Color(0xFFE3F2FD), // Azul claro
+                icon = Icons.Filled.Security,
+                iconColor = Color(0xFF1E88E5) // Azul
+            ),
+            Authority(
+                title = "Bomberos",
+                phone = "2528-0000",
+                description = "Incendios, rescates y emergencias con materiales peligrosos",
+                availability = "Disponible 24/7",
+                backgroundColor = Color(0xFFFBE9E7), // Rosa pálido
+                icon = Icons.Filled.Call,
+                iconColor = Color(0xFFE53935) // Rojo
+            ),
+            Authority(
+                title = "Cruz Roja",
+                phone = "2528-0000",
+                description = "Servicios médicos de emergencia y primeros auxilios",
+                availability = "Disponible 24/7",
+                backgroundColor = Color(0xFFE8F5E9), // Verde claro
+                icon = Icons.Filled.LocalHospital,
+                iconColor = Color(0xFF43A047) // Verde
+            )
+        )
+
         setContent {
             SeguridadTheme {
                 // Llamamos al composable que está definido aparte
-                AutoridadesRoute(  onBackClick = { finish() } )
+                AuthoritiesRoute(  onBackClick = { finish() }, authorities )
             }
         }
     }
 }
 
 
-
 @Composable
-fun ContactBlock(info: ContactInfo) {
+fun AuthorityCard(info: Authority) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -124,69 +135,15 @@ fun ContactBlock(info: ContactInfo) {
 // =========================================================================
 // 2. FUNCIÓN PRINCIPAL DE LA RUTA
 // =========================================================================
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun AutoridadesRoute(onBackClick: () -> Unit = {}) {
-
-    // Lista de datos de las autoridades (basada en image_f118fa.png)
-    val authorities = listOf(
-        ContactInfo(
-            title = "Policía Nacional",
-            phone = "2586-4000",
-            description = "Reportes de crímenes y situaciones que requieren intervención policial",
-            availability = "Disponible 24/7",
-            backgroundColor = Color(0xFFE3F2FD), // Azul claro
-            icon = Icons.Filled.Security,
-            iconColor = Color(0xFF1E88E5) // Azul
-        ),
-        ContactInfo(
-            title = "Bomberos",
-            phone = "2528-0000",
-            description = "Incendios, rescates y emergencias con materiales peligrosos",
-            availability = "Disponible 24/7",
-            backgroundColor = Color(0xFFFBE9E7), // Rosa pálido
-            icon = Icons.Filled.Call,
-            iconColor = Color(0xFFE53935) // Rojo
-        ),
-        ContactInfo(
-            title = "Cruz Roja",
-            phone = "2528-0000",
-            description = "Servicios médicos de emergencia y primeros auxilios",
-            availability = "Disponible 24/7",
-            backgroundColor = Color(0xFFE8F5E9), // Verde claro
-            icon = Icons.Filled.LocalHospital,
-            iconColor = Color(0xFF43A047) // Verde
-        )
-    )
+fun AuthoritiesRoute(onBackClick: () -> Unit = {}, authorities: List<Authority>) {
 
     Scaffold(
         topBar = {
-            TopAppBar(
-                title = {
-                    Box(
-                        modifier = Modifier.fillMaxWidth(),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text(
-                            text = "Contacto con Autoridades",
-                            style = MaterialTheme.typography.headlineLarge, // más pequeño que headlineLarge
-                            fontWeight = FontWeight.SemiBold,
-                            color =  Color.White
-                        )
-                    }
-                },
-                navigationIcon = {
-                    IconButton(onClick = onBackClick) {
-                        Icon(
-                            imageVector = Icons.Default.ArrowBack,
-                            contentDescription = "Regresar"
-                        )
-                    }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.primary
-                )
+            SmartTopAppBar(
+                title = "Contacto con Autoridades",
+                onBackClick = onBackClick,
             )
         }
     ) { paddingValues ->
@@ -201,13 +158,9 @@ fun AutoridadesRoute(onBackClick: () -> Unit = {}) {
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
 
-            // -------------------- Título y Subtítulo --------------------
-            Spacer(Modifier.height(16.dp))
-            Text(
-                text = "Encuentra información de contacto de emergencia, autoridades locales y recursos útiles para situaciones de seguridad",
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
-                modifier = Modifier.padding(top = 4.dp, bottom = 24.dp)
+            // -------------------- Título y Subtítulo -------------------
+            ScreenHeader(
+                subtitle = "Encuentra información de contacto de emergencia, autoridades locales y recursos útiles para situaciones de seguridad"
             )
 
             // -------------------- Bloque de Emergencia Inmediata (Llamar 911) --------------------
@@ -240,11 +193,8 @@ fun AutoridadesRoute(onBackClick: () -> Unit = {}) {
             }
 
             // -------------------- Bloques de Contacto Generales --------------------
-            // Se genera una lista similar a la mostrada en la imagen, usando un bloque para dos contactos
-            // Para mantener el diseño en 2 columnas, necesitarías un LazyVerticalGrid, pero para la simpleza usamos Column:
-
-            ContactBlock(
-                info = ContactInfo(
+            AuthorityCard(
+                info = Authority(
                     title = "Emergencia Generales",
                     phone = "911",
                     description = "Policía, bomberos y servicios médicos de emergencia",
@@ -255,9 +205,8 @@ fun AutoridadesRoute(onBackClick: () -> Unit = {}) {
                 )
             )
 
-            // Renderiza la lista de autoridades en bloques (se puede adaptar a 2 columnas con Grid)
             authorities.forEach { info ->
-                ContactBlock(info = info)
+                AuthorityCard(info = info)
             }
 
             // -------------------- Información Importante --------------------

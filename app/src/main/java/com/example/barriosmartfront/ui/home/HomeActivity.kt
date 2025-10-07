@@ -42,7 +42,8 @@ import androidx.compose.ui.unit.sp
 import com.example.barriosmartfront.data.auth.DataStoreTokenStore
 import com.example.barriosmartfront.data.dto.auth.NavItem
 import com.example.barriosmartfront.data.remote.ApiClient
-import com.example.barriosmartfront.ui.authorities.ContactActivity
+import com.example.barriosmartfront.ui.authorities.AuthoritiesActivity
+import com.example.barriosmartfront.ui.community.CommunityActivity
 
 import com.example.barriosmartfront.ui.theme.SeguridadTheme
 import com.example.barriosmartfront.ui.theme.SurfaceSoft
@@ -192,7 +193,10 @@ fun HomeRoute(
                         onClick = {
                             selectedItem = index
                             if (item.title == "Autoridades") {
-                                val intent = Intent(context, ContactActivity::class.java)
+                                val intent = Intent(context, AuthoritiesActivity::class.java)
+                                context.startActivity(intent)
+                            }else if (item.title == "Comunidades") {
+                                val intent = Intent(context, CommunityActivity::class.java)
                                 context.startActivity(intent)
                             }
                         }
