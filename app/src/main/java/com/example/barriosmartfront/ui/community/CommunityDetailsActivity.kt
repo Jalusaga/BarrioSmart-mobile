@@ -68,7 +68,7 @@ class CommunityDetailsActivity : ComponentActivity() {
             Report("Ruido excesivo en la noche", "Ruido Excesivo", "Ana López", "13/3/2024 a las 22:15", ReportStatus.APROBADO),
         )
 
-        val community = Community(1, "Barrio Centro", "Comunidad del centro histórico de la ciudad con gran actividad comercial y residencial", true,  isJoined = false) // Reemplaza con una llamada a tu ViewModel/Repository
+        val community = Community(1, 5, "Barrio Centro", "Comunidad del centro histórico de la ciudad con gran actividad comercial y residencial", true,  isJoined = false) // Reemplaza con una llamada a tu ViewModel/Repository
         val members = sampleMembers
         val reports = sampleReports
 

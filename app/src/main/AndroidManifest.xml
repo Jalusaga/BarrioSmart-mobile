@@ -40,6 +40,12 @@
             android:theme="@style/Theme.BarrioSmartFront"
             android:windowSoftInputMode="adjustResize" />
         <activity
+            android:name=".ui.community.NewCommunityActivity"
+            android:exported="true"
+            android:label="Crear Comunidad"
+            android:theme="@style/Theme.BarrioSmartFront"
+            android:windowSoftInputMode="adjustResize" />
+        <activity
             android:name=".ui.community.CommunityDetailsActivity"
             android:exported="true"
             android:label="Detalles Comunidad"

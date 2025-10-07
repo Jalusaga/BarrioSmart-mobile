@@ -31,9 +31,9 @@ class CommunityActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         val sampleCommunities = listOf(
-            Community(1, "Barrio Centro", "Comunidad del centro histórico de la ciudad con gran actividad comercial y residencial", true,  isJoined = false),
-            Community(2, "Zona Residencial Sur", "Comunidad del centro histórico de la ciudad con gran actividad comercial y residencial", true, isJoined = true),
-            Community(3, "Parque Industrial","Comunidad del centro histórico de la ciudad con gran actividad comercial y residencial",  true,  isJoined = false),
+            Community(1, 6, "Barrio Centro", "Comunidad del centro histórico de la ciudad con gran actividad comercial y residencial", true,  isJoined = false),
+            Community(2, 20, "Zona Residencial Sur", "Comunidad del centro histórico de la ciudad con gran actividad comercial y residencial", true, isJoined = true),
+            Community(3, 40, "Parque Industrial","Comunidad del centro histórico de la ciudad con gran actividad comercial y residencial",  true,  isJoined = false),
         )
         setContent {
             SeguridadTheme {
@@ -144,6 +144,11 @@ fun CommunityRoute(
         context.startActivity(intent)
     }
 
+    val navigateToNewCommunity: () -> Unit = {
+        val intent = Intent(activity, NewCommunityActivity::class.java)
+        activity.startActivity(intent)
+    }
+
     Scaffold(
         topBar = {
             SmartTopAppBar(
@@ -151,7 +156,7 @@ fun CommunityRoute(
                 onBackClick = onNavigateBack,
                 actions = {
                     Button(
-                        onClick = onNewCommunity,
+                        onClick = navigateToNewCommunity,
                         colors = ButtonDefaults.buttonColors(
                             containerColor = MaterialTheme.colorScheme.primary,
                             contentColor =  Color.White
