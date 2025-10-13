@@ -28,6 +28,36 @@
             android:theme="@style/Theme.BarrioSmartFront"
             android:windowSoftInputMode="adjustResize" />
         <activity
+            android:name=".ui.authorities.AuthoritiesActivity"
+            android:exported="true"
+            android:label="Contacto Autoridades"
+            android:theme="@style/Theme.BarrioSmartFront"
+            android:windowSoftInputMode="adjustResize" />
+        <activity
+            android:name=".ui.community.CommunityActivity"
+            android:exported="true"
+            android:label="Comunidades"
+            android:theme="@style/Theme.BarrioSmartFront"
+            android:windowSoftInputMode="adjustResize" />
+        <activity
+            android:name=".ui.community.NewCommunityActivity"
+            android:exported="true"
+            android:label="Crear Comunidad"
+            android:theme="@style/Theme.BarrioSmartFront"
+            android:windowSoftInputMode="adjustResize" />
+        <activity
+            android:name=".ui.community.CommunityDetailsActivity"
+            android:exported="true"
+            android:label="Detalles Comunidad"
+            android:theme="@style/Theme.BarrioSmartFront"
+            android:windowSoftInputMode="adjustResize" />
+        <activity
+            android:name=".ui.report.ReportActivity"
+            android:exported="true"
+            android:label="Reportes"
+            android:theme="@style/Theme.BarrioSmartFront"
+            android:windowSoftInputMode="adjustResize" />
+        <activity
             android:name=".ui.auth.LoginActivity"
             android:exported="true"
             android:label="@string/title_activity_login"
