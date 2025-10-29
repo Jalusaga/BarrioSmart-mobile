@@ -4,7 +4,6 @@ package com.example.barriosmartfront.ui.report
 import android.app.Activity
 import android.content.Context
 import android.content.ContextWrapper
-import android.content.Intent
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
@@ -23,8 +22,10 @@ import androidx.compose.material.icons.filled.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
+import com.example.barriosmartfront.data.dto.Report
+import com.example.barriosmartfront.data.dto.ReportStatus
+import com.example.barriosmartfront.data.dto.Type
 import com.example.barriosmartfront.ui.community.Community
 import com.example.barriosmartfront.ui.theme.FilterButton
 import com.example.barriosmartfront.ui.theme.SeguridadTheme
@@ -35,19 +36,33 @@ class ReportActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        val barrioCentro = Community(
-            id = 1,
-            name = "Barrio Centro",
-            description = "Comunidad central",
-            is_active = true,
-            isJoined = true
-        )
+        val barrioCentro = Community(id = 1, name = "Barrio Centro", description = "Comunidad central", is_active = true, isJoined = true)
+        val barrioLaguinilla = Community(id = 1, name = "Lagunilla", description = "Comunidad central", is_active = true, isJoined = true)
+
+        val tipoRobo = Type(1, "Robo")
+        val tipoAgresion = Type(2, "Agresión")
+        val tipoAcoso = Type(3, "Acoso")
+        val tipoUrto = Type(4, "Urto")
+
 
         val sampleReports = listOf(
-            Report("Actividad sospechosa en la plaza", "Grupo de personas merodeando cerca del parque infantil durante la madrugada", "María González", "14/1/2024", ReportStatus.PENDIENTE, barrioCentro),
-            Report("Robo en tienda local", "Intento de robo con arma blanca", "Juan Pérez", "21/5/2025", ReportStatus.PENDIENTE, barrioCentro),
-            Report("Ruido excesivo en la noche", "Fiesta con música alta hasta las 4 AM", "Ana López", "4/12/2025", ReportStatus.PENDIENTE, barrioCentro),
-            Report("Fuga de agua", "Gran charco en la calle principal", "Carlos Ruiz", "1/10/2025", ReportStatus.APROBADO, barrioCentro),
+            Report(
+                1,
+                barrioCentro,
+                tipoAgresion,
+                "Actividad sospechosa en la plaza",
+                "Grupo de personas merodeando cerca del parque infantil durante la madrugada",
+                10.123456,
+                -84.123456,
+                "14/1/2024 22:30",
+                ReportStatus.Pendiente,
+                false,
+                101,
+                null
+            ),
+            Report(2, barrioLaguinilla, tipoRobo, "Robo en tienda local", "Intento de robo con arma blanca", 10.654321, -84.654321, "21/5/2025 18:45", ReportStatus.Pendiente, false, 102, null),
+            Report(3, barrioLaguinilla, tipoAcoso, "Ruido excesivo en la noche", "Fiesta con música alta hasta las 4 AM", 10.222222, -84.222222, "4/12/2025 2:00", ReportStatus.Pendiente, false, 103, null),
+            Report(4, barrioCentro, tipoUrto, "Fuga de agua", "Gran charco en la calle principal", 10.333333, -84.333333, "1/10/2025 8:15", ReportStatus.Aprobado, false, 104, 201)
         )
 
         setContent {
@@ -84,11 +99,11 @@ fun ReportListRoute(
     onCreateNewReport: () -> Unit,
     onViewReportDetails: (Int) -> Unit
 ) {
-    // ⭐️ Estados para los filtros de búsqueda
+    // Estados de filtros
     var searchText by remember { mutableStateOf("") }
     var selectedCommunity by remember { mutableStateOf("Todos") }
-    var selectedStatus by remember { mutableStateOf("Pendiente") }
-    // En una app real, usarías un objeto State para manejar los filtros.
+    var selectedStatus by remember { mutableStateOf("Todos") }
+    var selectedType by remember { mutableStateOf("Todos") }
 
     Scaffold(
         topBar = {
@@ -100,9 +115,10 @@ fun ReportListRoute(
                         onClick = onCreateNewReport,
                         colors = ButtonDefaults.buttonColors(
                             containerColor = MaterialTheme.colorScheme.primary,
-                            contentColor =  Color.White
+                            contentColor = Color.White
                         ),
-                        modifier = Modifier.padding(end = 8.dp)
+                        modifier = Modifier
+                            .padding(end = 8.dp)
                             .border(
                                 width = 2.dp,
                                 color = Color.LightGray,
@@ -123,31 +139,34 @@ fun ReportListRoute(
                 .padding(paddingValues)
         ) {
 
-            // -------------------- Sección de Filtros de Búsqueda --------------------
+            // Filtros
             ReportFilters(
                 searchText = searchText,
                 onSearchTextChange = { searchText = it },
                 selectedCommunity = selectedCommunity,
-                selectedStatus = selectedStatus
+                selectedStatus = selectedStatus,
+                selectedType = selectedType,
+                onCommunityChange = { selectedCommunity = it },
+                onStatusChange = { selectedStatus = it },
+                onTypeChange = { selectedType = it }
             )
 
-            // -------------------- Lista de Reportes --------------------
+            // Lista filtrada
             LazyColumn(
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(horizontal = 16.dp),
                 contentPadding = PaddingValues(bottom = 16.dp)
             ) {
-                // Aquí aplicas los filtros a la lista de 'reports'
                 val filteredReports = reports.filter {
-                    // Simulación de filtros
-                    it.title.contains(searchText, ignoreCase = true)
+                    it.title.contains(searchText, ignoreCase = true) &&
+                            (selectedType == "Todos" || it.type.name.equals(selectedType, ignoreCase = true)) &&
+                            (selectedCommunity == "Todos" || it.community.name.equals(selectedCommunity, ignoreCase = true)) &&
+                            (selectedStatus == "Todos" || it.status.name.equals(selectedStatus, ignoreCase = true))
                 }
 
                 items(filteredReports) { report ->
-                    ReportCard(
-                        report = report
-                    )
+                    ReportCard(report = report)
                 }
             }
         }
@@ -162,8 +181,21 @@ fun ReportFilters(
     searchText: String,
     onSearchTextChange: (String) -> Unit,
     selectedCommunity: String,
-    selectedStatus: String
+    selectedStatus: String,
+    selectedType: String,
+    onCommunityChange: (String) -> Unit,
+    onStatusChange: (String) -> Unit,
+    onTypeChange: (String) -> Unit
 ) {
+    val communityOptions = listOf("Todos", "Lagunilla", "Barrio Centro", "Santo Domingo")
+    val typeOptions = listOf("Todos", "Agresión", "Acoso", "Robo", "Urto", "Amenaza", "Ruido")
+    val statusOptions = listOf("Todos", "Pendiente", "Aprobado", "Rechazado")
+
+    var communityExpanded by remember { mutableStateOf(false) }
+    var typeExpanded by remember { mutableStateOf(false) }
+    var statusExpanded by remember { mutableStateOf(false) }
+
+
     Surface(
         modifier = Modifier
             .fillMaxWidth()
@@ -172,9 +204,8 @@ fun ReportFilters(
         color = Color.White
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
-            // ... (Textos informativos se mantienen) ...
 
-            // Campo de búsqueda principal (OutlinedTextField)
+            // Campo de búsqueda
             OutlinedTextField(
                 value = searchText,
                 onValueChange = onSearchTextChange,
@@ -183,57 +214,134 @@ fun ReportFilters(
                 singleLine = true,
                 modifier = Modifier.fillMaxWidth()
             )
-            Spacer(Modifier.height(12.dp))
 
-            // ⭐️ Row de filtros con el nuevo estilo de botón
-            Text(
-                "Filtros Rápidos",
-                style = MaterialTheme.typography.bodySmall,
-                fontWeight = FontWeight.SemiBold,
-                modifier = Modifier.padding(vertical = 4.dp)
-            )
+            Spacer(Modifier.height(12.dp))
+            Text("Filtros Rápidos", style = MaterialTheme.typography.bodySmall, fontWeight = FontWeight.SemiBold)
+
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(8.dp) // Espaciado horizontal
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                // Filtro Comunidad
-                FilterButton(
-                    label = "Comunidad: $selectedCommunity",
-                    onClick = { /* Abrir diálogo o menú de comunidad */ },
-                    modifier = Modifier.weight(1f)
-                )
 
-                // Filtro Tipo
-                FilterButton(
-                    label = "Tipo: Todos",
-                    onClick = { /* Abrir diálogo o menú de tipo */ },
-                    modifier = Modifier.weight(1f)
-                )
+                // Comunidad
+                Box(modifier = Modifier.weight(1f)) {
+                    FilterButton(label = "Comunidad: $selectedCommunity", onClick = { communityExpanded = true })
+                    DropdownMenu(
+                        expanded = communityExpanded,
+                        onDismissRequest = { communityExpanded = false }
+                    ) {
+                        communityOptions.forEach { option ->
+                            DropdownMenuItem(
+                                text = { Text(option) },
+                                onClick = {
+                                    onCommunityChange(option)
+                                    communityExpanded = false
+                                }
+                            )
+                        }
+                    }
+                }
 
-                // Filtro Estado
-                FilterButton(
-                    label = "Estado: $selectedStatus",
-                    onClick = { /* Abrir diálogo o menú de estado */ },
-                    modifier = Modifier.weight(1f)
-                )
+                // Tipo
+                Box(modifier = Modifier.weight(1f)) {
+                    FilterButton(label = "Tipo: $selectedType", onClick = { typeExpanded = true })
+                    DropdownMenu(
+                        expanded = typeExpanded,
+                        onDismissRequest = { typeExpanded = false }
+                    ) {
+                        typeOptions.forEach { option ->
+                            DropdownMenuItem(
+                                text = { Text(option) },
+                                onClick = {
+                                    onTypeChange(option)
+                                    typeExpanded = false
+                                }
+                            )
+                        }
+                    }
+                }
+
+                // Estado
+                Box(modifier = Modifier.weight(1f)) {
+                    FilterButton(label = "Estado: $selectedStatus", onClick = { statusExpanded = true })
+                    DropdownMenu(
+                        expanded = statusExpanded,
+                        onDismissRequest = { statusExpanded = false }
+                    ) {
+                        statusOptions.forEach { option ->
+                            DropdownMenuItem(
+                                text = { Text(option) },
+                                onClick = {
+                                    onStatusChange(option)
+                                    statusExpanded = false
+                                }
+                            )
+                        }
+                    }
+                }
             }
-            Spacer(Modifier.height(16.dp))
-
-            // ⭐️ Campo de Fecha (Usando el estilo OutlinedField con label separado)
-            Text("Fecha:", style = MaterialTheme.typography.bodySmall, color = Color.Gray)
-            Spacer(Modifier.height(4.dp))
-            OutlinedTextField(
-                value = "mm / dd / yyyy",
-                onValueChange = { /* No hay cambio real aquí */ },
-                trailingIcon = { Icon(Icons.Filled.CalendarMonth, contentDescription = null, modifier = Modifier.clickable { /* Mostrar selector de fecha */ }) },
-                singleLine = true,
-                readOnly = true,
-                modifier = Modifier.fillMaxWidth(0.5f)
-            )
         }
     }
 }
+@Composable
+fun ReportCard(report: Report) {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 8.dp),
+        colors = CardDefaults.cardColors(containerColor = Color.White),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+    ) {
+        Column(modifier = Modifier.padding(16.dp)) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Text(report.title, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
 
+                val color = when (report.status) {
+                    ReportStatus.Aprobado -> Color(0xFF4CAF50)
+                    ReportStatus.Pendiente -> Color(0xFFFF9800)
+                    ReportStatus.Rechazado -> Color(0xFFF44336)
+                }
+                Text(report.status.name.capitalize(), color = Color.White,
+                    modifier = Modifier.background(color, RoundedCornerShape(4.dp)).padding(horizontal = 8.dp, vertical = 2.dp),
+                    style = MaterialTheme.typography.bodySmall
+                )
+            }
+
+            Spacer(Modifier.height(4.dp))
+            Text(report.description ?: "", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f))
+
+            Spacer(Modifier.height(8.dp))
+            Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                Icon(Icons.Filled.Warning, contentDescription = "Tipo", modifier = Modifier.size(16.dp), tint = Color.Gray)
+                Spacer(Modifier.width(4.dp))
+                Text(report.type.name, style = MaterialTheme.typography.bodySmall, color = Color.Gray)
+
+                Spacer(Modifier.width(12.dp))
+                Icon(Icons.Filled.LocationOn, contentDescription = "Comunidad", modifier = Modifier.size(16.dp), tint = Color.Gray)
+                Spacer(Modifier.width(4.dp))
+                Text(report.community.name, style = MaterialTheme.typography.bodySmall, color = Color.Gray)
+
+                Spacer(Modifier.width(12.dp))
+                Icon(Icons.Filled.CalendarMonth, contentDescription = "Fecha", modifier = Modifier.size(16.dp), tint = Color.Gray)
+                Spacer(Modifier.width(4.dp))
+                Text(report.occurredAt, style = MaterialTheme.typography.bodySmall, color = Color.Gray)
+
+                Spacer(Modifier.height(16.dp))
+                Icon(Icons.Filled.Person, contentDescription = "Reportero", modifier = Modifier.size(16.dp), tint = Color.Gray)
+
+                Spacer(Modifier.height(16.dp))
+                Text("Por ${report.reportedByUserId}", style = MaterialTheme.typography.bodySmall, color = Color.Gray)
+            }
+
+            OutlinedButton(onClick = { /* Navegar a detalles */ }, modifier = Modifier.fillMaxWidth()) {
+                Text("Ver Detalles")
+            }
+        }
+    }
+}
 
 // Componente para simular los Dropdowns de los filtros
 @Composable
@@ -261,103 +369,3 @@ fun FilterDropdown(label: String, value: String, options: List<String>, modifier
 }
 
 const val EXTRA_REPORT_ID = "report_id"
-@Composable
-fun ReportCard(report: Report) {
-    Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = 8.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
-    ) {
-        val context = LocalContext.current
-        val activity = context.findActivity()
-
-        val navigateToDetails: () -> Unit = {
-//            val intent = Intent(activity, ReportDetailsActivity::class.java).apply {
-//                // Usamos el hashCode como ID de simulación
-//                putExtra(EXTRA_REPORT_ID, report.hashCode())
-//            }
-//            activity.startActivity(intent)
-        }
-
-        Column(modifier = Modifier.padding(16.dp)) {
-            // Fila Superior (Título y Estado)
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                Text(
-                    text = report.title,
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold
-                )
-
-                // Etiqueta de Estado
-                val color = when (report.status) {
-                    ReportStatus.APROBADO -> Color(0xFF4CAF50) // Verde
-                    ReportStatus.PENDIENTE -> Color(0xFFFF9800) // Naranja
-                    ReportStatus.RECHAZADO -> Color(0xFFF44336) // Rojo
-                }
-                Text(
-                    text = report.status.name.capitalize(),
-                    color = Color.White,
-                    modifier = Modifier
-                        .background(color, RoundedCornerShape(4.dp))
-                        .padding(horizontal = 8.dp, vertical = 2.dp),
-                    style = MaterialTheme.typography.bodySmall
-                )
-            }
-            Spacer(Modifier.height(4.dp))
-
-            // Descripción
-            Text(
-                text = report.description,
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
-            )
-            Spacer(Modifier.height(8.dp))
-
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                // Tipo de Actividad
-                Icon(Icons.Filled.Warning, contentDescription = "Tipo", modifier = Modifier.size(16.dp), tint = Color.Gray)
-                Spacer(Modifier.width(4.dp))
-                Text(report.title.split(" ").first(), style = MaterialTheme.typography.bodySmall, color = Color.Gray)
-
-                Spacer(Modifier.width(12.dp))
-
-                // Comunidad
-                Icon(Icons.Filled.LocationOn, contentDescription = "Comunidad", modifier = Modifier.size(16.dp), tint = Color.Gray)
-                Spacer(Modifier.width(4.dp))
-                Text(report.community.name, style = MaterialTheme.typography.bodySmall, color = Color.Gray)
-
-                Spacer(Modifier.width(12.dp))
-
-                // Fecha
-                Icon(Icons.Filled.CalendarMonth, contentDescription = "Fecha", modifier = Modifier.size(16.dp), tint = Color.Gray)
-                Spacer(Modifier.width(4.dp))
-                Text(report.date, style = MaterialTheme.typography.bodySmall, color = Color.Gray)
-
-                Spacer(Modifier.width(12.dp))
-
-                // Reportero
-                Icon(Icons.Filled.Person, contentDescription = "Reportero", modifier = Modifier.size(16.dp), tint = Color.Gray)
-                Spacer(Modifier.width(4.dp))
-                Text("Por ${report.reporter.split(" ").first()}", style = MaterialTheme.typography.bodySmall, color = Color.Gray)
-            }
-
-            Spacer(Modifier.height(16.dp))
-
-            // ⭐️ Botón Ver Detalles (Necesario según la imagen)
-            OutlinedButton(
-                onClick = navigateToDetails,
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Text("Ver Detalles")
-            }
-        }
-    }
-}

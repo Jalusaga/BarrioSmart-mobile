@@ -27,12 +27,13 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.example.barriosmartfront.ui.member.Member
 import com.example.barriosmartfront.ui.member.MiembroCard
-import com.example.barriosmartfront.ui.report.Report
 import com.example.barriosmartfront.ui.report.ReportCard
 import com.example.barriosmartfront.ui.theme.SmartTopAppBar
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
-import com.example.barriosmartfront.ui.report.ReportStatus
+import com.example.barriosmartfront.data.dto.Type
+import com.example.barriosmartfront.data.dto.Report
+import com.example.barriosmartfront.data.dto.ReportStatus
 import com.example.barriosmartfront.ui.theme.SeguridadTheme
 
 
@@ -62,12 +63,25 @@ class CommunityDetailsActivity : ComponentActivity() {
             Member("LM", "Laura Martin", "29/2/2024"),
         )
 
-        val sampleReports = listOf(
-            Report("Actividad sospechosa en la plaza", "Actividad Sospechosa", "María González", "15/3/2024 a las 10:30", ReportStatus.PENDIENTE, Community()),
-            Report("Robo en tienda local", "Robo", "Juan Pérez", "14/3/2024 a las 15:45", ReportStatus.APROBADO, Community()),
-            Report("Ruido excesivo en la noche", "Ruido Excesivo", "Ana López", "13/3/2024 a las 22:15", ReportStatus.APROBADO, Community()),
+        val barrioCentro = Community(
+            id = 1,
+            name = "Barrio Centro",
+            description = "Comunidad central",
+            is_active = true,
+            isJoined = true
         )
 
+        val tipoRobo = Type(1, "Robo")
+        val tipoAgresion = Type(2, "Agresión")
+        val tipoAcoso = Type(3, "Acoso")
+        val tipoUrto = Type(4, "Urto")
+
+        val sampleReports = listOf(
+            Report(1, barrioCentro, tipoAgresion, "Actividad sospechosa en la plaza", "Grupo de personas merodeando cerca del parque infantil durante la madrugada", 10.123456, -84.123456, "14/1/2024 22:30", ReportStatus.Pendiente, false, 101, null),
+            Report(2, barrioCentro, tipoRobo, "Robo en tienda local", "Intento de robo con arma blanca", 10.654321, -84.654321, "21/5/2025 18:45", ReportStatus.Pendiente, false, 102, null),
+            Report(3, barrioCentro, tipoAcoso, "Ruido excesivo en la noche", "Fiesta con música alta hasta las 4 AM", 10.222222, -84.222222, "4/12/2025 2:00", ReportStatus.Pendiente, false, 103, null),
+            Report(4, barrioCentro, tipoUrto, "Fuga de agua", "Gran charco en la calle principal", 10.333333, -84.333333, "1/10/2025 8:15", ReportStatus.Aprobado, false, 104, 201)
+        )
         val community = Community(1, 5, "Barrio Centro", "Comunidad del centro histórico de la ciudad con gran actividad comercial y residencial", true,  isJoined = false) // Reemplaza con una llamada a tu ViewModel/Repository
         val members = sampleMembers
         val reports = sampleReports
