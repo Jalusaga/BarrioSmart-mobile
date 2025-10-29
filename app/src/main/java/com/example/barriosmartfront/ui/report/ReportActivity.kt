@@ -25,7 +25,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
-import com.example.barriosmartfront.ui.community.Community
+import com.example.barriosmartfront.data.dto.community.CommunityResponse
 import com.example.barriosmartfront.ui.theme.FilterButton
 import com.example.barriosmartfront.ui.theme.SeguridadTheme
 import com.example.barriosmartfront.ui.theme.SmartTopAppBar
@@ -35,11 +35,11 @@ class ReportActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        val barrioCentro = Community(
+        val barrioCentro = CommunityResponse(
             id = 1,
             name = "Barrio Centro",
             description = "Comunidad central",
-            is_active = true,
+            isActive = true,
             isJoined = true
         )
 
@@ -332,7 +332,7 @@ fun ReportCard(report: Report) {
                 // Comunidad
                 Icon(Icons.Filled.LocationOn, contentDescription = "Comunidad", modifier = Modifier.size(16.dp), tint = Color.Gray)
                 Spacer(Modifier.width(4.dp))
-                Text(report.community.name, style = MaterialTheme.typography.bodySmall, color = Color.Gray)
+                //Text(report.community, style = MaterialTheme.typography.bodySmall, color = Color.Gray)
 
                 Spacer(Modifier.width(12.dp))
 

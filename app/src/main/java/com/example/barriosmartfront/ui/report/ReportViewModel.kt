@@ -1,6 +1,6 @@
 package com.example.barriosmartfront.ui.report
 
-import com.example.barriosmartfront.ui.community.Community
+import com.example.barriosmartfront.data.dto.community.CommunityResponse
 
 
 data class Report(
@@ -9,6 +9,6 @@ data class Report(
     val reporter: String,
     val date: String,
     val status: ReportStatus,
-    val community: Community
+    val community: CommunityResponse
 )
 enum class ReportStatus { PENDIENTE, APROBADO, RECHAZADO }

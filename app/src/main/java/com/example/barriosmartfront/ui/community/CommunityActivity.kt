@@ -25,27 +25,45 @@ import android.content.Intent
 import android.app.Activity
 import android.content.Context
 import android.content.ContextWrapper
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import com.example.barriosmartfront.data.auth.DataStoreTokenStore
+import com.example.barriosmartfront.data.dto.community.CommunityResponse
+import com.example.barriosmartfront.data.repositories.CommunityRepository
 
 class CommunityActivity : ComponentActivity() {
 
+    private lateinit var viewModel: CommunityViewModel
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        val sampleCommunities = listOf(
-            Community(1, 6, "Barrio Centro", "Comunidad del centro histórico de la ciudad con gran actividad comercial y residencial", true,  isJoined = false),
-            Community(2, 20, "Zona Residencial Sur", "Comunidad del centro histórico de la ciudad con gran actividad comercial y residencial", true, isJoined = true),
-            Community(3, 40, "Parque Industrial","Comunidad del centro histórico de la ciudad con gran actividad comercial y residencial",  true,  isJoined = false),
-        )
+
+        // 🧩 Instancias necesarias para el ViewModel
+        val tokenStore = DataStoreTokenStore(this)
+        val repository = CommunityRepository(tokenStore)
+        viewModel = CommunityViewModel(repository)
+
         setContent {
             SeguridadTheme {
-                CommunityRoute(  onNavigateBack = { finish() }, onNewCommunity = { finish() }, sampleCommunities )
+                CommunityRoute(
+                    onNavigateBack = { finish() },
+                    onNewCommunity = { navigateToNewCommunity() },
+                    viewModel = viewModel
+                )
             }
         }
+    }
+
+    private fun navigateToNewCommunity() {
+        val intent = Intent(this, NewCommunityActivity::class.java)
+        startActivity(intent)
     }
 }
 
 @Composable
 fun CommunityCard(
-    community: Community,
+    community: CommunityResponse,
     onViewDetails: (Int) -> Unit,
     onJoinOrLeave: (Int, Boolean) -> Unit
 ) {
@@ -75,7 +93,7 @@ fun CommunityCard(
             Spacer(Modifier.height(8.dp))
 
             Text(
-                text = "${community.memberCount} miembros",
+                text = "miembros",
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
             )
@@ -126,27 +144,30 @@ fun CommunityCard(
 // =========================================================================
 // FUNCIÓN PRINCIPAL DE LA RUTA
 // =========================================================================
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CommunityRoute(
     onNavigateBack: () -> Unit,
     onNewCommunity: () -> Unit,
-    communities: List<Community>
+    viewModel: CommunityViewModel
 ) {
     val context = LocalContext.current
     val activity = context.findActivity()
+
+    val communities by viewModel.communities.collectAsState()
+    val isLoading by viewModel.loading.collectAsState()
+    val error by viewModel.error.collectAsState()
+
+    // 🔁 Cargar comunidades al iniciar
+    LaunchedEffect(Unit) {
+        viewModel.loadCommunities()
+    }
 
     val navigateToDetails: (Int) -> Unit = { communityId ->
         val intent = Intent(context, CommunityDetailsActivity::class.java).apply {
             putExtra(EXTRA_COMMUNITY_ID, communityId)
         }
         context.startActivity(intent)
-    }
-
-    val navigateToNewCommunity: () -> Unit = {
-        val intent = Intent(activity, NewCommunityActivity::class.java)
-        activity.startActivity(intent)
     }
 
     Scaffold(
@@ -156,18 +177,11 @@ fun CommunityRoute(
                 onBackClick = onNavigateBack,
                 actions = {
                     Button(
-                        onClick = navigateToNewCommunity,
+                        onClick = onNewCommunity,
                         colors = ButtonDefaults.buttonColors(
                             containerColor = MaterialTheme.colorScheme.primary,
-                            contentColor =  Color.White
-                        ),
-                        modifier = Modifier.padding(end = 8.dp)
-                            .border(
-                                width = 2.dp,
-                                color = Color.LightGray,
-                                shape = RoundedCornerShape(20.dp)
-                            ),
-
+                            contentColor = Color.White
+                        )
                     ) {
                         Icon(Icons.Filled.Add, contentDescription = "Nueva Comunidad", modifier = Modifier.size(16.dp))
                         Spacer(Modifier.width(4.dp))
@@ -189,16 +203,21 @@ fun CommunityRoute(
                 subtitle = "Únete a comunidades cercanas para mantenerte informado sobre la seguridad en tu área"
             )
 
-            LazyColumn(
-                modifier = Modifier.fillMaxSize(),
-                contentPadding = PaddingValues(bottom = 16.dp)
-            ) {
-                items(communities) { community ->
-                    CommunityCard(
-                        community = community,
-                        onViewDetails = navigateToDetails,
-                        onJoinOrLeave = { communityId, isJoining -> /* Lógica para unirse/salir */ }
-                    )
+            when {
+                isLoading -> CircularProgressIndicator(modifier = Modifier.padding(32.dp))
+                error != null -> Text("Error: $error", color = MaterialTheme.colorScheme.error)
+                else -> {
+                    LazyColumn(modifier = Modifier.fillMaxSize()) {
+                        items(communities) { community ->
+                            CommunityCard(
+                                community = community,
+                                onViewDetails = navigateToDetails,
+                                onJoinOrLeave = { id, isJoining ->
+
+                                }
+                            )
+                        }
+                    }
                 }
             }
         }
