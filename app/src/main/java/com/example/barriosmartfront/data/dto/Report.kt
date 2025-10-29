@@ -1,23 +1,16 @@
 package com.example.barriosmartfront.data.dto
 
-import com.example.barriosmartfront.ui.community.Community
 
 enum class ReportStatus {
-    Pendiente,
-    Aprobado,
-    Rechazado
+    pending,
+    approved,
+    rejected
 }
-
-// Tipo de reporte (para type_id)
-data class Type(
-    val id: Short,
-    val name: String
-)
 
 data class Report(
     val id: Long,                     // id bigint
     val community: Community,         // community_id -> objeto Community
-    val type: Type,                   // type_id -> objeto Type
+    val reportType: ReportType,                   // type_id -> objeto ReportType
     val title: String,                // varchar(140)
     val description: String?,         // text, puede ser null
     val latitude: Double,             // decimal(9,6)

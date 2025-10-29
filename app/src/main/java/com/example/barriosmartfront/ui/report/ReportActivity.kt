@@ -25,24 +25,58 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import com.example.barriosmartfront.data.dto.Report
 import com.example.barriosmartfront.data.dto.ReportStatus
-import com.example.barriosmartfront.data.dto.Type
-import com.example.barriosmartfront.ui.community.Community
+import com.example.barriosmartfront.data.dto.ReportType
+import com.example.barriosmartfront.data.dto.Community
 import com.example.barriosmartfront.ui.theme.FilterButton
 import com.example.barriosmartfront.ui.theme.SeguridadTheme
 import com.example.barriosmartfront.ui.theme.SmartTopAppBar
+import com.example.barriosmartfront.data.repositories.ReportsRepository
+import com.example.barriosmartfront.data.repositories.ReportTypeRepository
+import com.example.barriosmartfront.data.repositories.CommunityRepository
+import com.example.barriosmartfront.ui.community.CommunityViewModel
+import com.example.barriosmartfront.ui.types.ReportTypeViewModel
+import com.example.barriosmartfront.data.services.ReportsService
+import com.example.barriosmartfront.data.auth.DataStoreTokenStore
+import com.example.barriosmartfront.data.remote.ApiClient
+import com.example.barriosmartfront.data.services.CommunitiesService
+import com.example.barriosmartfront.data.services.ReportTypesService
+import kotlin.getValue
 
 
 class ReportActivity : ComponentActivity() {
+    private val tokenStore by lazy { DataStoreTokenStore(applicationContext) }
+    private val retrofit by lazy {
+        ApiClient.create(baseUrl = "http://10.0.2.2:8000/", tokenStore = tokenStore)
+    }
+
+    private val reportsService by lazy { retrofit.create(ReportsService::class.java) }
+    private val reportsRepo by lazy { ReportsRepository(reportsService) }
+    private val reportsVm by lazy { ReportViewModel(reportsRepo) }
+
+
+
+    private val communitiesService by lazy { retrofit.create(CommunitiesService::class.java) }
+    private val communitiesRepo by lazy { CommunityRepository(communitiesService) }
+    private val communitiesVm by lazy { CommunityViewModel(communitiesRepo) }
+
+
+    private val typesService by lazy { retrofit.create(ReportTypesService::class.java) }
+    private val typesRepo by lazy { ReportTypeRepository(typesService) }
+    private val typesVm by lazy { ReportTypeViewModel(typesRepo) }
+
+
+
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-
+        /*
         val barrioCentro = Community(id = 1, name = "Barrio Centro", description = "Comunidad central", is_active = true, isJoined = true)
         val barrioLaguinilla = Community(id = 1, name = "Lagunilla", description = "Comunidad central", is_active = true, isJoined = true)
 
-        val tipoRobo = Type(1, "Robo")
-        val tipoAgresion = Type(2, "Agresión")
-        val tipoAcoso = Type(3, "Acoso")
-        val tipoUrto = Type(4, "Urto")
+        val tipoRobo = ReportType(1, "Robo")
+        val tipoAgresion = ReportType(2, "Agresión")
+        val tipoAcoso = ReportType(3, "Acoso")
+        val tipoUrto = ReportType(4, "Urto")
 
 
         val sampleReports = listOf(
@@ -55,20 +89,22 @@ class ReportActivity : ComponentActivity() {
                 10.123456,
                 -84.123456,
                 "14/1/2024 22:30",
-                ReportStatus.Pendiente,
+                ReportStatus.pending,
                 false,
                 101,
                 null
             ),
-            Report(2, barrioLaguinilla, tipoRobo, "Robo en tienda local", "Intento de robo con arma blanca", 10.654321, -84.654321, "21/5/2025 18:45", ReportStatus.Pendiente, false, 102, null),
-            Report(3, barrioLaguinilla, tipoAcoso, "Ruido excesivo en la noche", "Fiesta con música alta hasta las 4 AM", 10.222222, -84.222222, "4/12/2025 2:00", ReportStatus.Pendiente, false, 103, null),
-            Report(4, barrioCentro, tipoUrto, "Fuga de agua", "Gran charco en la calle principal", 10.333333, -84.333333, "1/10/2025 8:15", ReportStatus.Aprobado, false, 104, 201)
+            Report(2, barrioLaguinilla, tipoRobo, "Robo en tienda local", "Intento de robo con arma blanca", 10.654321, -84.654321, "21/5/2025 18:45", ReportStatus.pending, false, 102, null),
+            Report(3, barrioLaguinilla, tipoAcoso, "Ruido excesivo en la noche", "Fiesta con música alta hasta las 4 AM", 10.222222, -84.222222, "4/12/2025 2:00", ReportStatus.pending, false, 103, null),
+            Report(4, barrioCentro, tipoUrto, "Fuga de agua", "Gran charco en la calle principal", 10.333333, -84.333333, "1/10/2025 8:15", ReportStatus.approved, false, 104, 201)
         )
-
+*/
         setContent {
             SeguridadTheme {
                 ReportListRoute(
-                    reports = sampleReports,
+                    vm = reportsVm,
+                    cvm = communitiesVm,
+                    rvm = typesVm,
                     onNavigateBack = { finish() },
                     onCreateNewReport = { /* Iniciar NewReportActivity */ },
                     onViewReportDetails = { reportId -> /* Iniciar ReportDetailsActivity */ }
@@ -94,16 +130,35 @@ fun Context.findActivity(): Activity {
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ReportListRoute(
-    reports: List<Report>,
+    vm: ReportViewModel,
+    cvm: CommunityViewModel,
+    rvm: ReportTypeViewModel,
     onNavigateBack: () -> Unit,
     onCreateNewReport: () -> Unit,
     onViewReportDetails: (Int) -> Unit
 ) {
+
+
+    val reports by vm.reports.collectAsState()
+    val isLoading by vm.isLoading.collectAsState()
+    val error by vm.error.collectAsState()
+
+
+    // Communities y Types (obteniendo el valor actual del StateFlow)
+    val communities by cvm.communities.collectAsState()
+    val reportTypes by rvm.reportTypes.collectAsState()
+
+    // Mapas para lookup por id
+    val communitiesMap = communities.associateBy({ it.id }, { it.name })
+    val typesMap = reportTypes.associateBy({ it.id }, { it.name })
+
     // Estados de filtros
     var searchText by remember { mutableStateOf("") }
     var selectedCommunity by remember { mutableStateOf("Todos") }
     var selectedStatus by remember { mutableStateOf("Todos") }
     var selectedType by remember { mutableStateOf("Todos") }
+
+    LaunchedEffect(Unit) { vm.fetchReports() }
 
     Scaffold(
         topBar = {
@@ -151,22 +206,42 @@ fun ReportListRoute(
                 onTypeChange = { selectedType = it }
             )
 
-            // Lista filtrada
-            LazyColumn(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(horizontal = 16.dp),
-                contentPadding = PaddingValues(bottom = 16.dp)
-            ) {
-                val filteredReports = reports.filter {
-                    it.title.contains(searchText, ignoreCase = true) &&
-                            (selectedType == "Todos" || it.type.name.equals(selectedType, ignoreCase = true)) &&
-                            (selectedCommunity == "Todos" || it.community.name.equals(selectedCommunity, ignoreCase = true)) &&
-                            (selectedStatus == "Todos" || it.status.name.equals(selectedStatus, ignoreCase = true))
+            if (isLoading) {
+                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                    CircularProgressIndicator()
                 }
+            } else if (error != null) {
+                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                    Text(text = error ?: "Error desconocido", color = MaterialTheme.colorScheme.error)
+                }
+            } else {
+                LazyColumn(
+                    modifier = Modifier.fillMaxSize().padding(horizontal = 16.dp),
+                    contentPadding = PaddingValues(bottom = 16.dp)
+                ) {
+                    val filteredReports = reports.filter {
+                        it.title.contains(searchText, ignoreCase = true) &&
+                                (selectedType == "Todos" || it.reportType.name.equals(
+                                    selectedType,
+                                    ignoreCase = true
+                                )) &&
+                                (selectedCommunity == "Todos" || it.community.name.equals(
+                                    selectedCommunity,
+                                    ignoreCase = true
+                                )) &&
+                                (selectedStatus == "Todos" || it.status.name.equals(
+                                    selectedStatus,
+                                    ignoreCase = true
+                                ))
+                    }
 
-                items(filteredReports) { report ->
-                    ReportCard(report = report)
+                    items(filteredReports) { report ->
+                        val communityName = communitiesMap[report.community.id] ?: "Desconocido"
+                        val typeName = typesMap[report.reportType.id] ?: "Desconocido"
+                        ReportCard(report = report,
+                        communityName = communityName,
+                        typeName = typeName)
+                    }
                 }
             }
         }
@@ -189,7 +264,7 @@ fun ReportFilters(
 ) {
     val communityOptions = listOf("Todos", "Lagunilla", "Barrio Centro", "Santo Domingo")
     val typeOptions = listOf("Todos", "Agresión", "Acoso", "Robo", "Urto", "Amenaza", "Ruido")
-    val statusOptions = listOf("Todos", "Pendiente", "Aprobado", "Rechazado")
+    val statusOptions = listOf("Todos", "pending", "approved", "rejected")
 
     var communityExpanded by remember { mutableStateOf(false) }
     var typeExpanded by remember { mutableStateOf(false) }
@@ -284,7 +359,9 @@ fun ReportFilters(
     }
 }
 @Composable
-fun ReportCard(report: Report) {
+fun ReportCard(report: Report,
+               communityName: String,
+               typeName: String) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -300,9 +377,9 @@ fun ReportCard(report: Report) {
                 Text(report.title, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
 
                 val color = when (report.status) {
-                    ReportStatus.Aprobado -> Color(0xFF4CAF50)
-                    ReportStatus.Pendiente -> Color(0xFFFF9800)
-                    ReportStatus.Rechazado -> Color(0xFFF44336)
+                    ReportStatus.approved -> Color(0xFF4CAF50)
+                    ReportStatus.pending -> Color(0xFFFF9800)
+                    ReportStatus.rejected -> Color(0xFFF44336)
                 }
                 Text(report.status.name.capitalize(), color = Color.White,
                     modifier = Modifier.background(color, RoundedCornerShape(4.dp)).padding(horizontal = 8.dp, vertical = 2.dp),
@@ -317,12 +394,12 @@ fun ReportCard(report: Report) {
             Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                 Icon(Icons.Filled.Warning, contentDescription = "Tipo", modifier = Modifier.size(16.dp), tint = Color.Gray)
                 Spacer(Modifier.width(4.dp))
-                Text(report.type.name, style = MaterialTheme.typography.bodySmall, color = Color.Gray)
+                Text(typeName, style = MaterialTheme.typography.bodySmall, color = Color.Gray)
 
                 Spacer(Modifier.width(12.dp))
                 Icon(Icons.Filled.LocationOn, contentDescription = "Comunidad", modifier = Modifier.size(16.dp), tint = Color.Gray)
                 Spacer(Modifier.width(4.dp))
-                Text(report.community.name, style = MaterialTheme.typography.bodySmall, color = Color.Gray)
+                Text(communityName, style = MaterialTheme.typography.bodySmall, color = Color.Gray)
 
                 Spacer(Modifier.width(12.dp))
                 Icon(Icons.Filled.CalendarMonth, contentDescription = "Fecha", modifier = Modifier.size(16.dp), tint = Color.Gray)
