@@ -4,7 +4,7 @@ package com.example.barriosmartfront.ui.report
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.barriosmartfront.data.dto.Report
+import com.example.barriosmartfront.data.dto.report.Report
 import com.example.barriosmartfront.data.repositories.ReportsRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow

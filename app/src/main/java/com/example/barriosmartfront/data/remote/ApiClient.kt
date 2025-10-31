@@ -32,6 +32,7 @@ object ApiClient {
             .readTimeout(20, TimeUnit.SECONDS)
             .writeTimeout(20, TimeUnit.SECONDS)
             .addInterceptor(AuthInterceptor(tokenStore))
+            .addInterceptor(logging) // <-- agrega esto
             .build()
         val moshi = Moshi.Builder()
             .add(KotlinJsonAdapterFactory())

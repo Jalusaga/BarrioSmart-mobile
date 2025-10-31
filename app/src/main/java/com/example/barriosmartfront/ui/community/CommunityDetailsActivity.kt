@@ -12,8 +12,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Group
-import androidx.compose.material.icons.filled.Phone
-import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -22,15 +20,11 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.barriosmartfront.data.auth.DataStoreTokenStore
 import com.example.barriosmartfront.data.dto.community.CommunityResponse
 import com.example.barriosmartfront.data.repositories.CommunityRepository
 import com.example.barriosmartfront.data.dto.member.Member
 import com.example.barriosmartfront.data.dto.report.Report
-import com.example.barriosmartfront.ui.member.MiembroCard
-import com.example.barriosmartfront.ui.report.ReportCard
-import com.example.barriosmartfront.ui.report.ReportStatus
 import com.example.barriosmartfront.ui.theme.SeguridadTheme
 import com.example.barriosmartfront.ui.theme.SmartTopAppBar
 

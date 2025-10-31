@@ -23,10 +23,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
-import com.example.barriosmartfront.data.dto.Report
-import com.example.barriosmartfront.data.dto.ReportStatus
-import com.example.barriosmartfront.data.dto.ReportType
-import com.example.barriosmartfront.data.dto.Community
+import com.example.barriosmartfront.data.dto.report.Report
+import com.example.barriosmartfront.data.dto.report.ReportStatus
+import com.example.barriosmartfront.data.dto.report.ReportType
+import com.example.barriosmartfront.data.dto.community.Community
 import com.example.barriosmartfront.ui.theme.FilterButton
 import com.example.barriosmartfront.ui.theme.SeguridadTheme
 import com.example.barriosmartfront.ui.theme.SmartTopAppBar
@@ -38,7 +38,6 @@ import com.example.barriosmartfront.ui.types.ReportTypeViewModel
 import com.example.barriosmartfront.data.services.ReportsService
 import com.example.barriosmartfront.data.auth.DataStoreTokenStore
 import com.example.barriosmartfront.data.remote.ApiClient
-import com.example.barriosmartfront.data.services.CommunitiesService
 import com.example.barriosmartfront.data.services.ReportTypesService
 import kotlin.getValue
 
@@ -55,10 +54,7 @@ class ReportActivity : ComponentActivity() {
 
 
 
-    private val communitiesService by lazy { retrofit.create(CommunitiesService::class.java) }
-    private val communitiesRepo by lazy { CommunityRepository(communitiesService) }
-    private val communitiesVm by lazy { CommunityViewModel(communitiesRepo) }
-
+    private lateinit var communitiesVm: CommunityViewModel
 
     private val typesService by lazy { retrofit.create(ReportTypesService::class.java) }
     private val typesRepo by lazy { ReportTypeRepository(typesService) }
@@ -99,6 +95,10 @@ class ReportActivity : ComponentActivity() {
             Report(4, barrioCentro, tipoUrto, "Fuga de agua", "Gran charco en la calle principal", 10.333333, -84.333333, "1/10/2025 8:15", ReportStatus.approved, false, 104, 201)
         )
 */
+
+        val repository = CommunityRepository(tokenStore)
+        communitiesVm = CommunityViewModel(repository)
+
         setContent {
             SeguridadTheme {
                 ReportListRoute(
@@ -221,11 +221,11 @@ fun ReportListRoute(
                 ) {
                     val filteredReports = reports.filter {
                         it.title.contains(searchText, ignoreCase = true) &&
-                                (selectedType == "Todos" || it.reportType.name.equals(
+                                (selectedType == "Todos" || it.type_id.name.equals(
                                     selectedType,
                                     ignoreCase = true
                                 )) &&
-                                (selectedCommunity == "Todos" || it.community.name.equals(
+                                (selectedCommunity == "Todos" || it.community_id.name.equals( //Aqui community_id es un object
                                     selectedCommunity,
                                     ignoreCase = true
                                 )) &&
@@ -235,12 +235,13 @@ fun ReportListRoute(
                                 ))
                     }
 
-                    items(filteredReports) { report ->
-                        val communityName = communitiesMap[report.community.id] ?: "Desconocido"
-                        val typeName = typesMap[report.reportType.id] ?: "Desconocido"
-                        ReportCard(report = report,
-                        communityName = communityName,
-                        typeName = typeName)
+                    items(filteredReports, key = { report -> report.id }) { report ->
+                        val communityName = report.community_id.name ?: "Desconocido"
+                        val typeName = report.type_id.name ?: "Desconocido"
+                        ReportCard(
+                            report = report,
+                            communityName = communityName,
+                            typeName = typeName)
                     }
                 }
             }
@@ -404,13 +405,13 @@ fun ReportCard(report: Report,
                 Spacer(Modifier.width(12.dp))
                 Icon(Icons.Filled.CalendarMonth, contentDescription = "Fecha", modifier = Modifier.size(16.dp), tint = Color.Gray)
                 Spacer(Modifier.width(4.dp))
-                Text(report.occurredAt, style = MaterialTheme.typography.bodySmall, color = Color.Gray)
+                Text(report.occurred_at, style = MaterialTheme.typography.bodySmall, color = Color.Gray)
 
                 Spacer(Modifier.height(16.dp))
                 Icon(Icons.Filled.Person, contentDescription = "Reportero", modifier = Modifier.size(16.dp), tint = Color.Gray)
 
                 Spacer(Modifier.height(16.dp))
-                Text("Por ${report.reportedByUserId}", style = MaterialTheme.typography.bodySmall, color = Color.Gray)
+                Text("Por ${report.reported_by_user_id}", style = MaterialTheme.typography.bodySmall, color = Color.Gray)
             }
 
             OutlinedButton(onClick = { /* Navegar a detalles */ }, modifier = Modifier.fillMaxWidth()) {

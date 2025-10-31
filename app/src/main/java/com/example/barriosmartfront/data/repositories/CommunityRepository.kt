@@ -32,7 +32,7 @@ class CommunityRepository(
                     name = community.name,
                     description = community.description ?: "",
                    // O lo que venga del backend si existe
-                    isActive = community.is_active,
+                    is_active = community.is_active,
                     isJoined = false
                 )
             }

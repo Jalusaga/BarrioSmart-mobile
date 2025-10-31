@@ -1,6 +1,6 @@
 package com.example.barriosmartfront.data.services
 
-import com.example.barriosmartfront.data.dto.Report
+import com.example.barriosmartfront.data.dto.report.Report
 import retrofit2.Response
 import retrofit2.http.GET
 
