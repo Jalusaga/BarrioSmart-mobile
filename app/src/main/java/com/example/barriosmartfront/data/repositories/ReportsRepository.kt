@@ -42,7 +42,7 @@ class ReportsRepository(
     }
 
     /** Crear un nuevo reporte */
-    suspend fun createReport(reportCreate: ReportCreate): Report? {
+    suspend fun createReport(reportCreate: Report): Report? {
         return try {
             api.createReport(reportCreate)
         } catch (e: Exception) {

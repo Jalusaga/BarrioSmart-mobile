@@ -23,7 +23,7 @@ interface ReportApi {
 
     // Crear un nuevo reporte
     @POST("reports/")
-    suspend fun createReport(@Body report: ReportCreate): Report
+    suspend fun createReport(@Body report: Report): Report
 
     // Actualizar parcialmente un reporte
     @PATCH("reports/{id}")

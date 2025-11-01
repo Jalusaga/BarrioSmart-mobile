@@ -70,6 +70,12 @@
             android:label="@string/title_activity_login"
             android:theme="@style/Theme.BarrioSmartFront">
         </activity>
+
+        <activity
+            android:name=".ui.report.NewReportActivity"
+            android:label="@string/title_new_report"
+            android:theme="@style/Theme.BarrioSmartFront">
+        </activity>
     </application>
 
 </manifest>

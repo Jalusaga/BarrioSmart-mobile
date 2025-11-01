@@ -4,6 +4,7 @@ package com.example.barriosmartfront.ui.report
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.barriosmartfront.data.dto.community.CommunityCreate
 import com.example.barriosmartfront.data.dto.report.Report
 import com.example.barriosmartfront.data.dto.report.ReportResponse
 import com.example.barriosmartfront.data.repositories.ReportsRepository
@@ -37,6 +38,18 @@ class ReportViewModel(private val repo: ReportsRepository) : ViewModel() {
             }
         }
     }
+
+    fun createReport(report: Report) {
+        viewModelScope.launch {
+            try {
+                repo.createReport(report)
+                fetchReports()
+            } catch (e: Exception) {
+                _error.value = "Error al crear reporte: ${e.message}"
+            }
+        }
+    }
+
 
 
 

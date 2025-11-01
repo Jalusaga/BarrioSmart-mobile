@@ -4,6 +4,7 @@ package com.example.barriosmartfront.ui.report
 import android.app.Activity
 import android.content.Context
 import android.content.ContextWrapper
+import android.content.Intent
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
@@ -35,6 +36,7 @@ import com.example.barriosmartfront.data.auth.DataStoreTokenStore
 import com.example.barriosmartfront.data.dto.report.ReportResponse
 import com.example.barriosmartfront.data.remote.ApiClient
 import com.example.barriosmartfront.data.services.ReportTypesService
+import com.example.barriosmartfront.ui.community.NewCommunityActivity
 import kotlin.getValue
 
 
@@ -103,11 +105,17 @@ class ReportActivity : ComponentActivity() {
                     cvm = communitiesVm,
                     rvm = typesVm,
                     onNavigateBack = { finish() },
-                    onCreateNewReport = { /* Iniciar NewReportActivity */ },
+                    onCreateNewReport = { navigateToNewReport() },
                     onViewReportDetails = { reportId -> /* Iniciar ReportDetailsActivity */ }
                 )
             }
         }
+    }
+
+
+    private fun navigateToNewReport() {
+        val intent = Intent(this, NewReportActivity::class.java)
+        startActivity(intent)
     }
 }
 
@@ -141,23 +149,26 @@ fun ReportListRoute(
         vm.fetchReports()
     }
 
-    val reports by vm.reports.collectAsState()
-    val isLoading by vm.isLoading.collectAsState()
-    val error by vm.error.collectAsState()
-
 
     // Communities y Types (obteniendo el valor actual del StateFlow)
     val communities by cvm.communities.collectAsState()
     val reportTypes by rvm.reportTypes.collectAsState()
+
+
+    // Mapas para lookup por id
+    val communitiesMap by remember(communities) { mutableStateOf(communities.associate { it.id to it.name }) }
+    val typesMap by remember(reportTypes) { mutableStateOf(reportTypes.associate { it.id to it.display_name }) }
 
     LaunchedEffect(communities, reportTypes) {
         println("Communities cargadas: ${communities.size} -> $communities")
         println("Report Types cargados: ${reportTypes.size} -> $reportTypes")
     }
 
-    // Mapas para lookup por id
-    val communitiesMap by remember(communities) { mutableStateOf(communities.associate { it.id to it.name }) }
-    val typesMap by remember(reportTypes) { mutableStateOf(reportTypes.associate { it.id to it.display_name }) }
+    val reports by vm.reports.collectAsState()
+    val isLoading by vm.isLoading.collectAsState()
+    val error by vm.error.collectAsState()
+
+
 
     // Estados de filtros
     var searchText by remember { mutableStateOf("") }
@@ -388,7 +399,7 @@ fun ReportCard(report: ReportResponse,
                     "rejected" -> Color(0xFFF44336)
                     else -> Color.Gray // por si viene un valor inesperado
                 }
-                Text(report.status.capitalize(), color = Color.White,
+                Text(report.status, color = Color.White,
                     modifier = Modifier.background(color, RoundedCornerShape(4.dp)).padding(horizontal = 8.dp, vertical = 2.dp),
                     style = MaterialTheme.typography.bodySmall
                 )
