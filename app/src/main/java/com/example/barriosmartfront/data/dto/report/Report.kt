@@ -1,11 +1,11 @@
 package com.example.barriosmartfront.data.dto.report
 
-import com.example.barriosmartfront.data.dto.community.Community
+import java.time.LocalDateTime
 
 
 data class ReportType(
-    val id: Short,
-    val name: String
+    val id: Int,
+    val display_name: String
 )
 enum class ReportStatus {
     pending,
@@ -13,17 +13,17 @@ enum class ReportStatus {
     rejected
 }
 
-data class Report(
-    val id: Long,                     // id bigint
-    val community_id: Community,         // community_id -> objeto Community
-    val type_id: ReportType,                   // type_id -> objeto ReportType
+class Report(
+    val id: Int,                     // id bigint
+    val community_id: Int,         // community_id -> objeto Community
+    val type_id: Int,                   // type_id -> objeto ReportType
     val title: String,                // varchar(140)
     val description: String?,         // text, puede ser null
     val latitude: Double,             // decimal(9,6)
     val longitude: Double,            // decimal(9,6)
-    val occurred_at: String,    // datetime
+    val occurred_at: LocalDateTime,    // datetime
     val status: ReportStatus,         // enum('pending','approved','rejected')
     val is_panic: Boolean,             // tinyint(1)
-    val reported_by_user_id: Long?,      // bigint, puede ser null
-    val approved_by_user_id: Long?,
+    val reported_by_user_id: Int?,      // bigint, puede ser null
+    val approved_by_user_id: Int?,
 )

@@ -29,6 +29,8 @@ class ReportTypeViewModel(private val repo: ReportTypeRepository) : ViewModel() 
                 val response: Response<List<ReportType>> = repo.getReportTypes()
                 if (response.isSuccessful) {
                     _reportTypes.value = response.body() ?: emptyList()
+                    println("Response code: ${response.code()}, body: ${response.body()}")
+
                 } else {
                     _error.value = "Error: ${response.code()} ${response.message()}"
                 }

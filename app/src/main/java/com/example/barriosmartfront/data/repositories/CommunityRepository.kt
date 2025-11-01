@@ -20,6 +20,8 @@ class CommunityRepository(
 
     suspend fun getAll(): List<CommunityResponse>? {
         val res = api.getCommunities()
+        println("Response code: ${res.code()}, body: ${res.body()}")
+
         return if (res.isSuccessful) res.body() else null
     }
 

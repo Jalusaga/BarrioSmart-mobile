@@ -23,10 +23,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
-import com.example.barriosmartfront.data.dto.report.Report
-import com.example.barriosmartfront.data.dto.report.ReportStatus
-import com.example.barriosmartfront.data.dto.report.ReportType
-import com.example.barriosmartfront.data.dto.community.Community
 import com.example.barriosmartfront.ui.theme.FilterButton
 import com.example.barriosmartfront.ui.theme.SeguridadTheme
 import com.example.barriosmartfront.ui.theme.SmartTopAppBar
@@ -35,8 +31,8 @@ import com.example.barriosmartfront.data.repositories.ReportTypeRepository
 import com.example.barriosmartfront.data.repositories.CommunityRepository
 import com.example.barriosmartfront.ui.community.CommunityViewModel
 import com.example.barriosmartfront.ui.types.ReportTypeViewModel
-import com.example.barriosmartfront.data.services.ReportsService
 import com.example.barriosmartfront.data.auth.DataStoreTokenStore
+import com.example.barriosmartfront.data.dto.report.ReportResponse
 import com.example.barriosmartfront.data.remote.ApiClient
 import com.example.barriosmartfront.data.services.ReportTypesService
 import kotlin.getValue
@@ -48,8 +44,7 @@ class ReportActivity : ComponentActivity() {
         ApiClient.create(baseUrl = "http://10.0.2.2:8000/", tokenStore = tokenStore)
     }
 
-    private val reportsService by lazy { retrofit.create(ReportsService::class.java) }
-    private val reportsRepo by lazy { ReportsRepository(reportsService) }
+    private val reportsRepo by lazy { ReportsRepository(tokenStore) }
     private val reportsVm by lazy { ReportViewModel(reportsRepo) }
 
 
@@ -99,6 +94,8 @@ class ReportActivity : ComponentActivity() {
         val repository = CommunityRepository(tokenStore)
         communitiesVm = CommunityViewModel(repository)
 
+
+
         setContent {
             SeguridadTheme {
                 ReportListRoute(
@@ -138,6 +135,11 @@ fun ReportListRoute(
     onViewReportDetails: (Int) -> Unit
 ) {
 
+    LaunchedEffect(Unit) {
+        cvm.loadCommunities()
+        rvm.fetchReportTypes()
+        vm.fetchReports()
+    }
 
     val reports by vm.reports.collectAsState()
     val isLoading by vm.isLoading.collectAsState()
@@ -148,17 +150,20 @@ fun ReportListRoute(
     val communities by cvm.communities.collectAsState()
     val reportTypes by rvm.reportTypes.collectAsState()
 
+    LaunchedEffect(communities, reportTypes) {
+        println("Communities cargadas: ${communities.size} -> $communities")
+        println("Report Types cargados: ${reportTypes.size} -> $reportTypes")
+    }
+
     // Mapas para lookup por id
-    val communitiesMap = communities.associateBy({ it.id }, { it.name })
-    val typesMap = reportTypes.associateBy({ it.id }, { it.name })
+    val communitiesMap by remember(communities) { mutableStateOf(communities.associate { it.id to it.name }) }
+    val typesMap by remember(reportTypes) { mutableStateOf(reportTypes.associate { it.id to it.display_name }) }
 
     // Estados de filtros
     var searchText by remember { mutableStateOf("") }
     var selectedCommunity by remember { mutableStateOf("Todos") }
     var selectedStatus by remember { mutableStateOf("Todos") }
     var selectedType by remember { mutableStateOf("Todos") }
-
-    LaunchedEffect(Unit) { vm.fetchReports() }
 
     Scaffold(
         topBar = {
@@ -221,23 +226,23 @@ fun ReportListRoute(
                 ) {
                     val filteredReports = reports.filter {
                         it.title.contains(searchText, ignoreCase = true) &&
-                                (selectedType == "Todos" || it.type_id.name.equals(
+                                (selectedType == "Todos" || typesMap[it.type_id].equals(
                                     selectedType,
                                     ignoreCase = true
                                 )) &&
-                                (selectedCommunity == "Todos" || it.community_id.name.equals( //Aqui community_id es un object
+                                (selectedCommunity == "Todos" || communitiesMap[it.community_id].equals( //Aqui community_id es un object
                                     selectedCommunity,
                                     ignoreCase = true
                                 )) &&
-                                (selectedStatus == "Todos" || it.status.name.equals(
+                                (selectedStatus == "Todos" || it.status.equals(
                                     selectedStatus,
                                     ignoreCase = true
                                 ))
                     }
 
                     items(filteredReports, key = { report -> report.id }) { report ->
-                        val communityName = report.community_id.name ?: "Desconocido"
-                        val typeName = report.type_id.name ?: "Desconocido"
+                        val communityName = communitiesMap[report.community_id] ?: "Desconocido"
+                        val typeName = typesMap[report.type_id] ?: "Desconocido"
                         ReportCard(
                             report = report,
                             communityName = communityName,
@@ -360,7 +365,7 @@ fun ReportFilters(
     }
 }
 @Composable
-fun ReportCard(report: Report,
+fun ReportCard(report: ReportResponse,
                communityName: String,
                typeName: String) {
     Card(
@@ -378,11 +383,12 @@ fun ReportCard(report: Report,
                 Text(report.title, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
 
                 val color = when (report.status) {
-                    ReportStatus.approved -> Color(0xFF4CAF50)
-                    ReportStatus.pending -> Color(0xFFFF9800)
-                    ReportStatus.rejected -> Color(0xFFF44336)
+                    "approved" -> Color(0xFF4CAF50)
+                    "pending" -> Color(0xFFFF9800)
+                    "rejected" -> Color(0xFFF44336)
+                    else -> Color.Gray // por si viene un valor inesperado
                 }
-                Text(report.status.name.capitalize(), color = Color.White,
+                Text(report.status.capitalize(), color = Color.White,
                     modifier = Modifier.background(color, RoundedCornerShape(4.dp)).padding(horizontal = 8.dp, vertical = 2.dp),
                     style = MaterialTheme.typography.bodySmall
                 )
@@ -405,7 +411,7 @@ fun ReportCard(report: Report,
                 Spacer(Modifier.width(12.dp))
                 Icon(Icons.Filled.CalendarMonth, contentDescription = "Fecha", modifier = Modifier.size(16.dp), tint = Color.Gray)
                 Spacer(Modifier.width(4.dp))
-                Text(report.occurred_at, style = MaterialTheme.typography.bodySmall, color = Color.Gray)
+                Text(report.occurred_at.toString(), style = MaterialTheme.typography.bodySmall, color = Color.Gray)
 
                 Spacer(Modifier.height(16.dp))
                 Icon(Icons.Filled.Person, contentDescription = "Reportero", modifier = Modifier.size(16.dp), tint = Color.Gray)
