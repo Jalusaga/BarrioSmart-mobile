@@ -19,12 +19,13 @@ data class Report(
     val description: String? ="",         // text, puede ser null
     val latitude: Double = 0.0,             // decimal(9,6)
     val longitude: Double = 0.0,            // decimal(9,6)
-    val occurred_at: LocalDateTime = defaultOccurredAt(),    // datetime
+    val occurred_at: String = "",    // datetime
     val status: String = "",         // enum('pending','approved','rejected')
     val is_panic: Boolean = false,             // tinyint(1)
     val reported_by_user_id: Int? = 0,      // bigint, puede ser null
     val approved_by_user_id: Int? = 0,
 )
+
 @RequiresApi(Build.VERSION_CODES.O)
 private fun defaultOccurredAt(): LocalDateTime {
     return LocalDateTime.now()

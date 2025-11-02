@@ -1,6 +1,6 @@
 package com.example.barriosmartfront.data.dto.report
 
-class ReportResponse(
+data class ReportResponse(
     val id: Int,
     val community_id: Int,
     val type_id: Int,

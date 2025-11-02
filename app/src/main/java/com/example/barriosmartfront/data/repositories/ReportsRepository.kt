@@ -51,8 +51,7 @@ class ReportsRepository(
         }
     }
 
-    /** Actualizar parcialmente un reporte */
-    suspend fun updateReport(reportId: Int, updates: ReportUpdate): Report? {
+    suspend fun updateReport(reportId: Int, updates: ReportResponse): Report? {
         return try {
             api.updateReport(reportId, updates)
         } catch (e: Exception) {

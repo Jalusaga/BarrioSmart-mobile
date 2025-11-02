@@ -4,14 +4,13 @@ package com.example.barriosmartfront.ui.report
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.barriosmartfront.data.dto.community.CommunityCreate
 import com.example.barriosmartfront.data.dto.report.Report
 import com.example.barriosmartfront.data.dto.report.ReportResponse
+import com.example.barriosmartfront.data.dto.report.ReportUpdate
 import com.example.barriosmartfront.data.repositories.ReportsRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
-import retrofit2.Response
 
 class ReportViewModel(private val repo: ReportsRepository) : ViewModel() {
 
@@ -50,7 +49,17 @@ class ReportViewModel(private val repo: ReportsRepository) : ViewModel() {
         }
     }
 
+    fun updateReport(report: ReportResponse) {
+        viewModelScope.launch {
+            try {
 
+                repo.updateReport(report.id, report )
+                fetchReports()
+            } catch (e: Exception) {
+                _error.value = "Error al actualizar reporte: ${e.message}"
+            }
+        }
+    }
 
 
 }

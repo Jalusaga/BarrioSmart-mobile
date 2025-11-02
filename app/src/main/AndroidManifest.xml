@@ -76,6 +76,11 @@
             android:label="@string/title_new_report"
             android:theme="@style/Theme.BarrioSmartFront">
         </activity>
+        <activity
+            android:name=".ui.report.ReportDetailsActivity"
+            android:label="@string/title_report_details"
+            android:theme="@style/Theme.BarrioSmartFront">
+        </activity>
     </application>
 
 </manifest>

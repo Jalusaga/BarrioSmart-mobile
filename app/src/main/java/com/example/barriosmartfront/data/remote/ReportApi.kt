@@ -29,6 +29,6 @@ interface ReportApi {
     @PATCH("reports/{id}")
     suspend fun updateReport(
         @Path("id") id: Int,
-        @Body updates: ReportUpdate
+        @Body updates: ReportResponse
     ): Report
 }

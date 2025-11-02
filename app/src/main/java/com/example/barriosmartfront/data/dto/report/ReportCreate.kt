@@ -9,5 +9,4 @@ data class ReportCreate(
     val type_id: Int = 0,
     val community_id: Int = 0,
     val location: String = ""
-
 )

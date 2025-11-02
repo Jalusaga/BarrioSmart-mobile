@@ -45,7 +45,6 @@ import com.example.barriosmartfront.data.repositories.ReportTypeRepository
 import com.example.barriosmartfront.data.repositories.ReportsRepository
 import com.example.barriosmartfront.data.services.ReportTypesService
 import com.example.barriosmartfront.ui.community.CommunityViewModel
-import com.example.barriosmartfront.ui.community.NewCommunityRoute
 import com.example.barriosmartfront.ui.theme.SeguridadTheme
 import com.example.barriosmartfront.ui.types.ReportTypeViewModel
 import java.time.LocalDateTime
@@ -144,30 +143,34 @@ fun NewReportRoute(
                 actions = {
                     Button(
                         onClick = {
-                            // 1. Mapeo: Obtener IDs
-                            val communityId = communities.find { it.name == selectedCommunity }?.id ?: 0
+                            //val communityId = communities.find { it.name == selectedCommunity }?.id ?: 0
                             val typeId = reportTypes.find { it.display_name == selectedIncidentType }?.id ?: 0
+                            val communityId = 1
 
-                            // 2. Mapeo: Unir y parsear Fecha y Hora
-                            val combinedDateTimeStr = "$dateString $timeString"
-                            val occurredAt = try {
-                                LocalDateTime.parse(combinedDateTimeStr, DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm"))
-                            } catch (e: Exception) {
-                                LocalDateTime.now() // Fallback
+                            val occurredAtIso = runCatching {
+                                LocalDateTime.parse(
+                                    "$dateString $timeString",
+                                    DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm")
+                                ).format(DateTimeFormatter.ISO_LOCAL_DATE_TIME)
+                            }.getOrElse {
+                                // Por si hay un error de parse, usar la fecha/hora actual
+                                LocalDateTime.now().format(DateTimeFormatter.ISO_LOCAL_DATE_TIME)
                             }
+
 
                             // 3. Mapeo: Determinar el ID de usuario reportador
                             // Si es anónimo (true), el ID es null. Si no lo es, se asume un ID.
-                            val reportedById: Int? = if (isAnonymousCheck) null else 10 // Ejemplo: ID 10 para el usuario logeado
+                            val reportedById: Int? = if (isAnonymousCheck) null else 1 // Ejemplo: ID 10 para el usuario logeado
 
                             // 4. Crear el objeto Report final usando .copy() (ahora funciona)
-                            val newReport = uiState.copy( // 💥 Usa .copy()
+                            val newReport = uiState.copy(
                                 community_id = communityId,
                                 type_id = typeId,
-                                occurred_at = occurredAt,
+                                status = "pending",
+                                occurred_at = occurredAtIso,
                                 description = uiState.description?.ifEmpty { null },
-                                reported_by_user_id = reportedById, // 💥 Corrección de lógica de Anónimo
-                                // Otros campos de uiState (title, latitude, etc.) se copian
+                                reported_by_user_id = reportedById,
+                                approved_by_user_id = null
                             )
 
                             reportViewModel.createReport(newReport)
@@ -198,7 +201,6 @@ fun NewReportRoute(
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // 💥 CHECK DE ANÓNIMO: Usa el nuevo estado isAnonymousCheck
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Text("Reporte Anónimo", modifier = Modifier.weight(1f))
                 Switch(
@@ -208,9 +210,6 @@ fun NewReportRoute(
             }
 
             Spacer(modifier = Modifier.height(16.dp))
-
-            // ... (El resto de los campos de la UI: Título, Descripción, Fecha/Hora, Dropdowns, Ubicación)
-            // (Se mantienen los estados separados: dateString, timeString, selectedIncidentType, etc.)
 
             // Título
             OutlinedTextField(
@@ -253,8 +252,6 @@ fun NewReportRoute(
                     modifier = Modifier.weight(1f)
                 )
             }
-
-            // ... (Dropdowns y Ubicación mantienen su lógica con estados separados)
 
             Spacer(modifier = Modifier.height(16.dp))
 
@@ -319,7 +316,8 @@ fun DropdownSelector(
     label: String,
     options: List<String>,
     selectedValue: String,
-    onValueSelected: (String) -> Unit
+    onValueSelected: (String) -> Unit,
+    enabled: Boolean = true
 ) {
     var expanded by remember { mutableStateOf(false) }
     val displayText = if (selectedValue.isNotEmpty()) selectedValue else "Seleccione"
@@ -331,30 +329,35 @@ fun DropdownSelector(
             value = displayText,
             onValueChange = { },
             readOnly = true,
+            enabled = enabled,
             trailingIcon = {
                 Icon(
                     Icons.Default.ArrowDropDown,
                     contentDescription = "Dropdown",
-                    modifier = Modifier.clickable { expanded = !expanded }
+                    modifier = Modifier.clickable(enabled = enabled) {
+                        expanded = !expanded
+                    }
                 )
             },
             modifier = Modifier
                 .fillMaxWidth()
-                .clickable { expanded = !expanded }
+                .clickable(enabled = enabled) { expanded = !expanded }
         )
-        DropdownMenu(
-            expanded = expanded,
-            onDismissRequest = { expanded = false },
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            options.forEach { option ->
-                DropdownMenuItem(
-                    text = { Text(option) },
-                    onClick = {
-                        onValueSelected(option)
-                        expanded = false
-                    }
-                )
+        if (enabled) {
+            DropdownMenu(
+                expanded = expanded,
+                onDismissRequest = { expanded = false },
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                options.forEach { option ->
+                    DropdownMenuItem(
+                        text = { Text(option) },
+                        onClick = {
+                            onValueSelected(option)
+                            expanded = false
+                        }
+                    )
+                }
             }
         }
     }
