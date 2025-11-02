@@ -8,7 +8,6 @@ data class CommunityResponse(
     val name: String,
     val description: String? = null,
     val is_active: Boolean,
-    val isJoined: Boolean,
     val members: List<Member> = emptyList(),
     val reports: List<Report> = emptyList()
 )

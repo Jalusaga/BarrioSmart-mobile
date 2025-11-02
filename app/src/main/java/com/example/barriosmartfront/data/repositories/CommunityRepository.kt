@@ -35,7 +35,6 @@ class CommunityRepository(
                     description = community.description ?: "",
                    // O lo que venga del backend si existe
                     is_active = community.is_active,
-                    isJoined = false
                 )
             }
         } else null

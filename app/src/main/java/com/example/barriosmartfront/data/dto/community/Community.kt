@@ -7,5 +7,4 @@ data class Community(
     val description: String = "",
 
     val is_active: Boolean = false,
-    val isJoined: Boolean = false
 )

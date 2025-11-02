@@ -54,6 +54,10 @@ class CommunityActivity : ComponentActivity() {
         }
     }
 
+    override fun onResume() {
+        super.onResume()
+        viewModel.loadCommunities()
+    }
     private fun navigateToNewCommunity() {
         val intent = Intent(this, NewCommunityActivity::class.java)
         startActivity(intent)
@@ -64,7 +68,7 @@ class CommunityActivity : ComponentActivity() {
 fun CommunityCard(
     community: CommunityResponse,
     onViewDetails: (Int) -> Unit,
-    onJoinOrLeave: (Int, Boolean) -> Unit
+    onJoin: (Int) -> Unit
 ) {
     Card(
         modifier = Modifier
@@ -75,27 +79,27 @@ fun CommunityCard(
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
+
+            // Nombre de la comunidad
             Text(
                 text = community.name,
                 style = MaterialTheme.typography.titleLarge,
                 fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.onSurface
             )
+
             Spacer(Modifier.height(4.dp))
 
-            // Descripción/Detalles
+            // Descripción (placeholder por ahora porque backend no la manda aún)
             Text(
-                text = "Comunidad del centro histórico de la ciudad", // Descripción fija por ahora
+                text = "Comunidad cercana a tu zona",
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
             )
+
             Spacer(Modifier.height(8.dp))
 
-            Text(
-                text = "miembros",
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
-            )
+            // Info secundaria / metadata mock
             Text(
                 text = "Zona activa",
                 style = MaterialTheme.typography.bodySmall,
@@ -104,13 +108,13 @@ fun CommunityCard(
 
             Spacer(Modifier.height(16.dp))
 
-            // Botones de Acción
+            // Botones
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.End,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                // Botón Ver Detalles
+                // Ver Detalles
                 OutlinedButton(
                     onClick = { onViewDetails(community.id) },
                     modifier = Modifier.weight(1f)
@@ -120,19 +124,16 @@ fun CommunityCard(
 
                 Spacer(Modifier.width(8.dp))
 
-                // Botón Unirse / Salir
-                val buttonText = if (community.isJoined) "Salir" else "Unirse"
-                val buttonColor = if (community.isJoined) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary
-                val contentColor = if (community.isJoined) Color.White else MaterialTheme.colorScheme.onPrimary
-
+                // Unirse (siempre unirse por ahora)
                 Button(
-                    onClick = { onJoinOrLeave(community.id, !community.isJoined) },
+                    onClick = { onJoin(community.id) },
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = buttonColor,
-                        contentColor = contentColor
-                    )
+                        containerColor = MaterialTheme.colorScheme.primary,
+                        contentColor = Color.White
+                    ),
+                    modifier = Modifier.weight(1f)
                 ) {
-                    Text(buttonText)
+                    Text("Unirse")
                 }
             }
         }
@@ -211,8 +212,9 @@ fun CommunityRoute(
                             CommunityCard(
                                 community = community,
                                 onViewDetails = navigateToDetails,
-                                onJoinOrLeave = { id, isJoining ->
-
+                                onJoin = { id ->
+                                    // llamar al ViewModel para unirse a la comunidad
+                                    // viewModel.joinCommunity(id)
                                 }
                             )
                         }
