@@ -10,8 +10,6 @@ import androidx.compose.ui.unit.dp
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -31,6 +29,7 @@ import com.example.barriosmartfront.data.repositories.CommunityRepository
 import com.example.barriosmartfront.ui.community.CommunityViewModel
 import com.example.barriosmartfront.ui.types.ReportTypeViewModel
 import com.example.barriosmartfront.data.auth.DataStoreTokenStore
+import com.example.barriosmartfront.data.auth.UsersService
 import com.example.barriosmartfront.data.dto.report.ReportResponse
 import com.example.barriosmartfront.data.remote.ApiClient
 import com.example.barriosmartfront.data.services.ReportTypesService
@@ -45,6 +44,9 @@ class ReportActivity : ComponentActivity() {
     private val reportsRepo by lazy { ReportsRepository(tokenStore) }
     private val reportsVm by lazy { ReportViewModel(reportsRepo) }
     private lateinit var communitiesVm: CommunityViewModel
+
+    private lateinit var usersVm: UsersService
+
 
     private val typesService by lazy { retrofit.create(ReportTypesService::class.java) }
     private val typesRepo by lazy { ReportTypeRepository(typesService) }
@@ -117,20 +119,21 @@ fun ReportListRoute(
     Scaffold(
         topBar = {
             SmartTopAppBar(
-                title = "Reportes de Incidentes",
+                title = "Reportes",
                 onBackClick = onNavigateBack,
                 actions = {
                     Button(
                         onClick = onCreateNewReport,
                         colors = ButtonDefaults.buttonColors(
-                            containerColor = MaterialTheme.colorScheme.primary,
+                            containerColor = MaterialTheme.colorScheme.secondary,
                             contentColor = Color.White
                         ),
-                        modifier = Modifier
-                            .padding(end = 8.dp)
-                            .border(2.dp, Color.LightGray, RoundedCornerShape(20.dp))
+                        shape = RoundedCornerShape(8.dp),
+                        modifier = Modifier.padding(end = 8.dp)
                     ) {
-                        Icon(Icons.Filled.Add, contentDescription = "Crear Reporte", modifier = Modifier.size(16.dp))
+                        Icon(Icons.Filled.Add,
+                            contentDescription = "Crear",
+                            modifier = Modifier.size(16.dp))
                         Spacer(Modifier.width(4.dp))
                         Text("Crear")
                     }
@@ -212,9 +215,9 @@ fun ReportFilters(
     var statusExpanded by remember { mutableStateOf(false) }
 
     Surface(
-        modifier = Modifier.fillMaxWidth().padding(16.dp),
-        shape = RoundedCornerShape(12.dp),
-        color = Color.White
+        color = Color.White,
+        shape = RoundedCornerShape(8.dp),
+        modifier = Modifier.padding(end = 8.dp)
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
             OutlinedTextField(
@@ -321,30 +324,48 @@ fun ReportCard(
             Text(report.description ?: "", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f))
 
             Spacer(Modifier.height(8.dp))
-            Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-                Icon(Icons.Filled.Warning, contentDescription = "Tipo", modifier = Modifier.size(16.dp), tint = Color.Gray)
-                Spacer(Modifier.width(4.dp))
-                Text(typeName, style = MaterialTheme.typography.bodySmall, color = Color.Gray)
 
-                Spacer(Modifier.width(12.dp))
-                Icon(Icons.Filled.LocationOn, contentDescription = "Comunidad", modifier = Modifier.size(16.dp), tint = Color.Gray)
-                Spacer(Modifier.width(4.dp))
-                Text(communityName, style = MaterialTheme.typography.bodySmall, color = Color.Gray)
+            // Fila 1: Tipo y Comunidad
+            Row(
+                modifier = Modifier.padding(0.dp, 10.dp)
+            ) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(Icons.Filled.Warning, contentDescription = "Tipo", modifier = Modifier.size(16.dp), tint = Color.Gray)
+                    Spacer(Modifier.width(4.dp))
+                    Text(typeName, style = MaterialTheme.typography.bodySmall, color = Color.Gray)
+                }
 
-                Spacer(Modifier.width(12.dp))
-                Icon(Icons.Filled.CalendarMonth, contentDescription = "Fecha", modifier = Modifier.size(16.dp), tint = Color.Gray)
-                Spacer(Modifier.width(4.dp))
-                Text(report.occurred_at, style = MaterialTheme.typography.bodySmall, color = Color.Gray)
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(Icons.Filled.LocationOn, contentDescription = "Comunidad", modifier = Modifier.size(16.dp), tint = Color.Gray)
+                    Spacer(Modifier.width(4.dp))
+                    Text(communityName, style = MaterialTheme.typography.bodySmall, color = Color.Gray)
+                }
+            }
 
-                Spacer(Modifier.width(12.dp))
-                Icon(Icons.Filled.Person, contentDescription = "Reportero", modifier = Modifier.size(16.dp), tint = Color.Gray)
-                Spacer(Modifier.width(4.dp))
-                Text("Por ${report.reported_by_user_id}", style = MaterialTheme.typography.bodySmall, color = Color.Gray)
+            Spacer(Modifier.height(1.dp))
+
+            // Fila 2: Fecha y Reportero
+            Row(
+                modifier = Modifier.padding(0.dp, 10.dp)
+            ) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(Icons.Filled.CalendarMonth, contentDescription = "Fecha", modifier = Modifier.size(16.dp), tint = Color.Gray)
+                    Spacer(Modifier.width(4.dp))
+                    Text(report.occurred_at, style = MaterialTheme.typography.bodySmall, color = Color.Gray)
+                }
+
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(Icons.Filled.Person, contentDescription = "Reportero", modifier = Modifier.size(16.dp), tint = Color.Gray)
+                    Spacer(Modifier.width(4.dp))
+                    Text("Por ${report.id}", style = MaterialTheme.typography.bodySmall, color = Color.Gray)
+                }
             }
 
             OutlinedButton(
                 onClick = { onViewReportDetails(report.id) },
-                modifier = Modifier.padding(top = 8.dp)
+                modifier = Modifier
+                    .padding(top = 8.dp)
+                    .align(Alignment.CenterHorizontally)
             ) {
                 Text("Ver Detalles")
             }

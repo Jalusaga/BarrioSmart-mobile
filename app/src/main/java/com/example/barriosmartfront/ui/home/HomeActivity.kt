@@ -5,6 +5,7 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.background
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -20,12 +21,14 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Group
 import androidx.compose.material.icons.filled.ReportProblem
 import androidx.compose.material.icons.filled.Security
+import androidx.compose.material.ripple.rememberRipple
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
+import androidx.compose.material3.NavigationBarItemDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -50,15 +53,6 @@ import com.example.barriosmartfront.ui.theme.SeguridadTheme
 import com.example.barriosmartfront.ui.theme.SurfaceSoft
 
 class HomeActivity : ComponentActivity() {
-    private val tokenStore by lazy { DataStoreTokenStore(applicationContext) }
-
-    private val retrofit by lazy {
-        ApiClient.create(
-            baseUrl = "http://10.0.2.2:8000/", tokenStore = tokenStore
-        )
-    }
-
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
@@ -80,6 +74,7 @@ fun HomeRoute(
     onButtonClick: () -> Unit
 ) {
     val context = LocalContext.current
+    val interactionSource = remember { MutableInteractionSource() }
 
     val menuItems = listOf(
         NavItem("Comunidades", Icons.Filled.Group),
@@ -87,10 +82,6 @@ fun HomeRoute(
         NavItem("Autoridades", Icons.Filled.Security)
     )
 
-    // Estado para saber qué ítem está seleccionado (simulación de navegación)
-    var selectedItem by remember { mutableStateOf(0) }
-
-    // Contenedor principal: Ocupa toda la pantalla
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -179,33 +170,48 @@ fun HomeRoute(
                 .fillMaxSize(),
             contentAlignment = Alignment.BottomCenter // Alineación clave: Fija el menú abajo
         ) {
+            var selectedItem by remember { mutableStateOf(-1) }
+
+
             NavigationBar(
-                // Puedes personalizar el color de fondo aquí
                 containerColor = MaterialTheme.colorScheme.surface
             ) {
                 menuItems.forEachIndexed { index, item ->
+                    val interactionSource = remember { MutableInteractionSource() }
+
                     NavigationBarItem(
-                        icon = { Icon(item.icon, contentDescription = item.title) },
+                        icon = {
+                            Icon(
+                                item.icon,
+                                contentDescription = item.title,
+                                tint = MaterialTheme.colorScheme.primary // color fijo
+                            )
+                        },
                         label = { Text(item.title) },
-                        selected = selectedItem == index,
+                        selected = false, // no queremos que cambie visualmente
                         onClick = {
                             selectedItem = index
-                            if (item.title == "Autoridades") {
-                                val intent = Intent(context, AuthoritiesActivity::class.java)
-                                context.startActivity(intent)
-                            }else if (item.title == "Comunidades") {
-                                val intent = Intent(context, CommunityActivity::class.java)
-                                context.startActivity(intent)
-                            }else if(item.title == "Reportes"){
-                                val intent = Intent(context, ReportActivity::class.java)
-                                context.startActivity(intent)
+                            when (item.title) {
+                                "Autoridades" -> context.startActivity(Intent(context, AuthoritiesActivity::class.java))
+                                "Comunidades" -> context.startActivity(Intent(context, CommunityActivity::class.java))
+                                "Reportes" -> context.startActivity(Intent(context, ReportActivity::class.java))
                             }
-                        }
-
+                        },
+                        colors = NavigationBarItemDefaults.colors(
+                            selectedIconColor = MaterialTheme.colorScheme.primary,
+                            selectedTextColor = MaterialTheme.colorScheme.primary,
+                            unselectedIconColor = MaterialTheme.colorScheme.primary,
+                            unselectedTextColor = MaterialTheme.colorScheme.primary,
+                            indicatorColor = Color.Transparent // sin fondo permanente
+                        ),
+                        interactionSource = interactionSource,
+                        // Ripple gris claro al pulsar
+                        // `indication` se aplica al interactionSource
+                        // Nota: Solo disponible en Compose >= 1.4
                     )
                 }
             }
+
         }
     }
-
 }

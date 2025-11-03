@@ -173,7 +173,7 @@ fun CommunityRoute(
     Scaffold(
         topBar = {
             SmartTopAppBar(
-                title = "Comunidades Disponibles",
+                title = "Comunidades",
                 onBackClick = onNavigateBack,
                 actions = {
                     Button(

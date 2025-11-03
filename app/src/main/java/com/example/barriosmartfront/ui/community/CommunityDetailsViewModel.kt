@@ -1,10 +1,12 @@
 package com.example.barriosmartfront.ui.community
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.barriosmartfront.data.dto.community.CommunityResponse
 import com.example.barriosmartfront.data.dto.member.Member
 import com.example.barriosmartfront.data.dto.report.Report
+import com.example.barriosmartfront.data.dto.report.ReportResponse
 import com.example.barriosmartfront.data.repositories.CommunityRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -20,8 +22,8 @@ class CommunityDetailsViewModel(
     private val _members = MutableStateFlow<List<Member>>(emptyList())
     val members: StateFlow<List<Member>> = _members
 
-    private val _reports = MutableStateFlow<List<Report>>(emptyList())
-    val reports: StateFlow<List<Report>> = _reports
+    private val _reports = MutableStateFlow<List<ReportResponse>>(emptyList())
+    val reports: StateFlow<List<ReportResponse>> = _reports
 
     private val _loading = MutableStateFlow(false)
     val loading: StateFlow<Boolean> = _loading
@@ -42,6 +44,8 @@ class CommunityDetailsViewModel(
 
                 val reportsData = repository.getReports(communityId)
                 _reports.value = reportsData
+
+                Log.d("CommunityDetailsVM", "Reportes cargados: ${reports.value}")
 
             } catch (e: Exception) {
                 _error.value = e.message

@@ -4,9 +4,10 @@ package com.example.barriosmartfront.ui.report
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.barriosmartfront.data.dto.auth.RegisterResponse
+import com.example.barriosmartfront.data.dto.community.CommunityResponse
 import com.example.barriosmartfront.data.dto.report.Report
 import com.example.barriosmartfront.data.dto.report.ReportResponse
-import com.example.barriosmartfront.data.dto.report.ReportUpdate
 import com.example.barriosmartfront.data.repositories.ReportsRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -14,8 +15,14 @@ import kotlinx.coroutines.launch
 
 class ReportViewModel(private val repo: ReportsRepository) : ViewModel() {
 
+    private val _communities = MutableStateFlow<List<CommunityResponse>>(emptyList())
+    val communities: StateFlow<List<CommunityResponse>> = _communities
+
+    private val _members = MutableStateFlow<List<RegisterResponse>>(emptyList())
+    val members: StateFlow<List<RegisterResponse>> = _members
+
     private val _reports = MutableStateFlow<List<ReportResponse>>(emptyList())
-    val reports: StateFlow<List<ReportResponse>> get() = _reports
+    val reports: StateFlow<List<ReportResponse>> = _reports
 
     private val _isLoading = MutableStateFlow(false)
     val isLoading: StateFlow<Boolean> get() = _isLoading
@@ -28,8 +35,15 @@ class ReportViewModel(private val repo: ReportsRepository) : ViewModel() {
             _isLoading.value = true
             _error.value = null
             try {
+                val communityData = repo.getCommunities()
+                _communities.value = communityData
+
+                val membersData = repo.getUsers()
+                _members.value = membersData
+
                 val response = repo.getAllReports()
-                    _reports.value = response ?: emptyList()
+                _reports.value = response ?: emptyList()
+
             } catch (e: Exception) {
                 _error.value = e.localizedMessage ?: "Error desconocido"
             } finally {

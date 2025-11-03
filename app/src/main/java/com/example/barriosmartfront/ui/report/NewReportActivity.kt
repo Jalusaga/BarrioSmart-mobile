@@ -8,6 +8,7 @@ import androidx.annotation.RequiresApi
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
@@ -30,6 +31,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.*
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -117,7 +119,6 @@ fun NewReportRoute(
     var selectedCommunity by remember { mutableStateOf("") }
     var locationString by remember { mutableStateOf("") }
 
-    // 💥 NUEVO ESTADO: Manejar el check de Anónimo
     var isAnonymousCheck by remember { mutableStateOf(false) }
 
 
@@ -133,17 +134,21 @@ fun NewReportRoute(
 
     Scaffold(
         topBar = {
-            CenterAlignedTopAppBar( // Componente Material 3 (soluciona error de API experimental)
-                title = { Text("Nuevo Reporte") },
+            CenterAlignedTopAppBar(
+                title = {
+                    Text(
+                        text = "Nuevo Reporte",
+                        color = Color.White
+                    )
+                },
                 navigationIcon = {
                     IconButton(onClick = onBackClick) {
-                        Icon(Icons.Filled.ArrowBack, contentDescription = "Atrás")
+                        Icon(Icons.Filled.ArrowBack, contentDescription = "Atrás", tint = Color.White)
                     }
                 },
                 actions = {
                     Button(
                         onClick = {
-                            //val communityId = communities.find { it.name == selectedCommunity }?.id ?: 0
                             val typeId = reportTypes.find { it.display_name == selectedIncidentType }?.id ?: 0
                             val communityId = 1
 
@@ -153,16 +158,11 @@ fun NewReportRoute(
                                     DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm")
                                 ).format(DateTimeFormatter.ISO_LOCAL_DATE_TIME)
                             }.getOrElse {
-                                // Por si hay un error de parse, usar la fecha/hora actual
                                 LocalDateTime.now().format(DateTimeFormatter.ISO_LOCAL_DATE_TIME)
                             }
 
+                            val reportedById: Int? = if (isAnonymousCheck) 1 else 4 //Cambiar el 4 por el id real del usuario
 
-                            // 3. Mapeo: Determinar el ID de usuario reportador
-                            // Si es anónimo (true), el ID es null. Si no lo es, se asume un ID.
-                            val reportedById: Int? = if (isAnonymousCheck) null else 1 // Ejemplo: ID 10 para el usuario logeado
-
-                            // 4. Crear el objeto Report final usando .copy() (ahora funciona)
                             val newReport = uiState.copy(
                                 community_id = communityId,
                                 type_id = typeId,
@@ -176,11 +176,22 @@ fun NewReportRoute(
                             reportViewModel.createReport(newReport)
                             onCreateSuccess()
                         },
-                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF28a745))
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = MaterialTheme.colorScheme.secondary,
+                            contentColor = Color.White
+                        ),
+                        shape = RoundedCornerShape(8.dp),
+                        modifier = Modifier.padding(end = 8.dp)
                     ) {
-                        Text("Crear", color = Color.White)
+                        Text("Crear")
                     }
-                }
+                },
+                colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.primary, // 🔹 Color de fondo de la app bar
+                    titleContentColor = Color.White,
+                    navigationIconContentColor = Color.White,
+                    actionIconContentColor = Color.White
+                )
             )
         }
     ) { paddingValues ->
@@ -191,15 +202,8 @@ fun NewReportRoute(
                 .padding(horizontal = 16.dp)
                 .verticalScroll(rememberScrollState())
         ) {
-            Spacer(modifier = Modifier.height(16.dp))
 
-            Text(
-                text = "Nuevo Reporte de Incidente",
-                style = MaterialTheme.typography.titleLarge,
-                fontWeight = FontWeight.Bold
-            )
-
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(26.dp))
 
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Text("Reporte Anónimo", modifier = Modifier.weight(1f))

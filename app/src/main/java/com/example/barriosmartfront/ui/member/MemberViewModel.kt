@@ -6,3 +6,4 @@ data class Member(
     val joinDate: String,
     val role: String? = null // 'Administrador' o null
 )
+

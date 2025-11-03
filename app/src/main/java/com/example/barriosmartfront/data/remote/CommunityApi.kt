@@ -7,6 +7,7 @@ import com.example.barriosmartfront.data.dto.community.CommunityResponse
 import com.example.barriosmartfront.data.dto.community.CommunityUpdate
 import com.example.barriosmartfront.data.dto.member.Member
 import com.example.barriosmartfront.data.dto.report.Report
+import com.example.barriosmartfront.data.dto.report.ReportResponse
 import retrofit2.Response
 import retrofit2.http.*
 
@@ -30,8 +31,8 @@ interface CommunityApi {
     @GET("communities/{id}/members")
     suspend fun getMembers(@Path("id") communityId: Int): Response<List<Member>>
 
-    @GET("communities/{id}/reports")
-    suspend fun getReports(@Path("id") communityId: Int): Response<List<Report>>
+    @GET("reports/community/{community_id}")
+    suspend fun getReports(@Path("community_id") communityId: Int): Response<List<ReportResponse>>
 
 
 }

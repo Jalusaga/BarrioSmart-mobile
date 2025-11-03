@@ -1,17 +1,12 @@
 package com.example.barriosmartfront.data.repositories
 
 import com.example.barriosmartfront.data.auth.ITokenStore
+import com.example.barriosmartfront.data.dto.auth.RegisterResponse
 import com.example.barriosmartfront.data.dto.community.CommunityResponse
 import com.example.barriosmartfront.data.dto.report.Report
-import com.example.barriosmartfront.data.dto.report.ReportCreate
 import com.example.barriosmartfront.data.dto.report.ReportResponse
-import com.example.barriosmartfront.data.dto.report.ReportUpdate
 import com.example.barriosmartfront.data.remote.ApiClient
 import com.example.barriosmartfront.data.remote.ReportApi
-import retrofit2.Response
-
-
-
 
 
 class ReportsRepository(
@@ -59,6 +54,18 @@ class ReportsRepository(
             null
         }
     }
+
+    suspend fun getUsers(): List<RegisterResponse> {
+        val res = api.getUsers()
+        return if (res.isSuccessful) res.body() ?: emptyList() else emptyList()
+    }
+
+    suspend fun getCommunities(): List<CommunityResponse> {
+        val res = api.getCommunities()
+        return if (res.isSuccessful) res.body() ?: emptyList() else emptyList()
+    }
+
+
 
     /*/** Filtrar reportes por comunidad o tipo (si quieres funciones extra) */
     suspend fun getReportsByCommunity(communityId: Int): List<Report> {

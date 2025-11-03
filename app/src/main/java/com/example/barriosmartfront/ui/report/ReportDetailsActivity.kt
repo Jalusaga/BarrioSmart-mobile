@@ -17,6 +17,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
@@ -31,6 +32,7 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -145,52 +147,81 @@ fun ReportDetailsScreen(
     Scaffold(
         topBar = {
             CenterAlignedTopAppBar(
-                title = { Text("Detalles del Reporte") },
+                title = {
+                    Text(
+                        "Detalles del Reporte",
+                        color = Color.White // 🔹 Texto blanco para contraste
+                    )
+                },
                 navigationIcon = {
                     IconButton(onClick = onBackClick) {
-                        Icon(Icons.Filled.ArrowBack, contentDescription = "Atrás")
+                        Icon(
+                            Icons.Filled.ArrowBack,
+                            contentDescription = "Atrás",
+                            tint = Color.White // 🔹 Ícono blanco
+                        )
                     }
                 },
-                actions = {
-                    Button(
-                        onClick = {
-                            if (isEditing) {
-                                // Guardar cambios
-                                val typeId = reportTypes.find { it.display_name == selectedIncidentType }?.id ?: report.type_id
-                                val communityId = communities.find { it.name == selectedCommunity }?.id ?: report.community_id
-
-                                val occurredAtIso = runCatching {
-                                    LocalDateTime.parse(
-                                        "$dateString $timeString",
-                                        DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")
-                                    ).format(DateTimeFormatter.ISO_LOCAL_DATE_TIME)
-                                }.getOrElse { LocalDateTime.now().format(DateTimeFormatter.ISO_LOCAL_DATE_TIME) }
-
-                                val updatedReport = report.copy(
-                                    title = uiState.title,
-                                    description = uiState.description,
-                                    type_id = typeId,
-                                    community_id = communityId,
-                                    occurred_at = occurredAtIso,
-                                    reported_by_user_id = if (isAnonymousCheck) null else report.reported_by_user_id
-                                )
-
-                                Log.d("ReportDetails", "Tipo seleccionado: $selectedIncidentType")
-
-                                vm.updateReport(updatedReport)
-                            }
-                            isEditing = !isEditing
-                        },
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = if (isEditing) Color(0xFF28a745) else Color(0xFF007bff)
-                        )
-                    ) {
-                        Text(if (isEditing) "Guardar" else "Editar", color = Color.White)
-                    }
-                }
+                colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.primary, // 🔹 Color igual al otro Scaffold
+                    titleContentColor = Color.White,
+                    navigationIconContentColor = Color.White,
+                    actionIconContentColor = Color.White
+                )
             )
+        },
+        bottomBar = {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp),
+                horizontalArrangement = Arrangement.Center
+            ) {
+                Button(
+                    onClick = {
+                        if (isEditing) {
+                            // Guardar cambios
+                            val typeId =
+                                reportTypes.find { it.display_name == selectedIncidentType }?.id
+                                    ?: report.type_id
+                            val communityId = communities.find { it.name == selectedCommunity }?.id
+                                ?: report.community_id
+
+                            val occurredAtIso = runCatching {
+                                LocalDateTime.parse(
+                                    "$dateString $timeString",
+                                    DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")
+                                ).format(DateTimeFormatter.ISO_LOCAL_DATE_TIME)
+                            }.getOrElse {
+                                LocalDateTime.now().format(DateTimeFormatter.ISO_LOCAL_DATE_TIME)
+                            }
+
+                            val updatedReport = report.copy(
+                                title = uiState.title,
+                                description = uiState.description,
+                                type_id = typeId,
+                                community_id = communityId,
+                                occurred_at = occurredAtIso,
+                                reported_by_user_id = if (isAnonymousCheck) null else report.reported_by_user_id
+                            )
+
+                            Log.d("ReportDetails", "Tipo seleccionado: $selectedIncidentType")
+
+                            vm.updateReport(updatedReport)
+                        }
+                        isEditing = !isEditing
+                    },
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = if (isEditing) MaterialTheme.colorScheme.secondary else MaterialTheme.colorScheme.primary
+                    ),
+                    shape = RoundedCornerShape(8.dp)
+                ) {
+                    Text(if (isEditing) "Guardar" else "Editar", color = Color.White)
+                }
+            }
         }
-    ) { paddingValues ->
+
+    ) {  paddingValues ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -198,13 +229,7 @@ fun ReportDetailsScreen(
                 .padding(horizontal = 16.dp)
                 .verticalScroll(rememberScrollState())
         ) {
-            Spacer(modifier = Modifier.height(16.dp))
-            Text(
-                text = "Reporte de Incidente",
-                style = MaterialTheme.typography.titleLarge,
-                fontWeight = FontWeight.Bold
-            )
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(26.dp))
 
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Text("Reporte Anónimo", modifier = Modifier.weight(1f))
@@ -272,5 +297,7 @@ fun ReportDetailsScreen(
 
             Spacer(modifier = Modifier.height(24.dp))
         }
+
+
     }
 }

@@ -1,5 +1,6 @@
 package com.example.barriosmartfront.ui.community
 
+import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -18,6 +19,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.example.barriosmartfront.data.auth.DataStoreTokenStore
@@ -25,6 +27,9 @@ import com.example.barriosmartfront.data.dto.community.CommunityResponse
 import com.example.barriosmartfront.data.repositories.CommunityRepository
 import com.example.barriosmartfront.data.dto.member.Member
 import com.example.barriosmartfront.data.dto.report.Report
+import com.example.barriosmartfront.data.dto.report.ReportResponse
+import com.example.barriosmartfront.ui.report.ReportCard
+import com.example.barriosmartfront.ui.report.ReportDetailsActivity
 import com.example.barriosmartfront.ui.theme.SeguridadTheme
 import com.example.barriosmartfront.ui.theme.SmartTopAppBar
 
@@ -87,13 +92,21 @@ class CommunityDetailsActivity : ComponentActivity() {
 fun CommunityDetailsRoute(
     community: CommunityResponse,
     members: List<Member>,
-    reports: List<Report>,
+    reports: List<ReportResponse>,
     onBackClick: () -> Unit,
     onLeaveCommunity: () -> Unit,
     onViewAllReports: () -> Unit
 ) {
     val tabs = listOf("Resumen", "Miembros", "Reportes Recientes")
     var selectedTabIndex by remember { mutableIntStateOf(0) }
+
+    val context = LocalContext.current
+    val onViewReportDetails: (Int) -> Unit = { reportId ->
+        val intent = Intent(context, ReportDetailsActivity::class.java)
+        intent.putExtra("EXTRA_REPORT_ID", reportId)
+        context.startActivity(intent)
+    }
+
 
     Scaffold(
         topBar = {
@@ -146,7 +159,7 @@ fun CommunityDetailsRoute(
                 when (selectedTabIndex) {
                     0 -> TabResumen(community)
                     1 -> TabMiembros(members)
-                    2 -> TabReportesRecientes(reports, onViewAllReports)
+                    2 -> TabReportesRecientes(reports, onViewAllReports, onViewReportDetails)
                 }
             }
         }
@@ -181,12 +194,29 @@ fun TabMiembros(members: List<Member>) {
 }
 
 @Composable
-fun TabReportesRecientes(reports: List<Report>, onViewAllReports: () -> Unit) {
+fun TabReportesRecientes(reports: List<ReportResponse>, onViewAllReports: () -> Unit, onViewReportDetails: (Int) -> Unit ) {
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
         Spacer(Modifier.height(16.dp))
         Text("Reportes Recientes", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, modifier = Modifier.align(Alignment.Start))
         Text("Últimos incidentes reportados en la comunidad", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f), modifier = Modifier.padding(bottom = 8.dp).align(Alignment.Start))
-        //reports.forEach { report -> ReportCard(report) }
+
+        LazyColumn(
+            modifier = Modifier.fillMaxWidth(),
+            contentPadding = PaddingValues(bottom = 16.dp)
+        ) {
+            // Mostramos los 5 reportes más recientes
+            items(reports.take(5), key = { it.id }) { report ->
+                ReportCard(
+                    report = report,
+                    communityName = "",
+                    typeName =  "Desconocido", // si tienes un campo tipo nombre
+                    onViewReportDetails = onViewReportDetails
+                )
+                Spacer(Modifier.height(8.dp))
+            }
+        }
+
+
         Spacer(Modifier.height(16.dp))
         OutlinedButton(onClick = onViewAllReports) { Text("Ver Todos los Reportes") }
         Spacer(Modifier.height(16.dp))

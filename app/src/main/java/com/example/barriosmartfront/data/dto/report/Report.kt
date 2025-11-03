@@ -12,13 +12,13 @@ data class ReportType(
 
 @RequiresApi(Build.VERSION_CODES.O)
 data class Report(
-    val id: Int = 0,                     // id bigint
+    val id: Int? = null,                     // id bigint
     val community_id: Int = 0,         // community_id -> objeto Community
     val type_id: Int = 0,                   // type_id -> objeto ReportType
     val title: String = "",                // varchar(140)
     val description: String? ="",         // text, puede ser null
-    val latitude: Double = 0.0,             // decimal(9,6)
-    val longitude: Double = 0.0,            // decimal(9,6)
+    val latitude: Double = 1.0,             // decimal(9,6)
+    val longitude: Double = 1.0,            // decimal(9,6)
     val occurred_at: String = "",    // datetime
     val status: String = "",         // enum('pending','approved','rejected')
     val is_panic: Boolean = false,             // tinyint(1)

@@ -1,6 +1,7 @@
 package com.example.barriosmartfront.data.repositories
 
 
+import android.util.Log
 import com.example.barriosmartfront.data.auth.ITokenStore
 import com.example.barriosmartfront.data.dto.community.Community
 import com.example.barriosmartfront.data.dto.community.CommunityCreate
@@ -8,6 +9,7 @@ import com.example.barriosmartfront.data.dto.community.CommunityResponse
 import com.example.barriosmartfront.data.dto.community.CommunityUpdate
 import com.example.barriosmartfront.data.dto.member.Member
 import com.example.barriosmartfront.data.dto.report.Report
+import com.example.barriosmartfront.data.dto.report.ReportResponse
 import com.example.barriosmartfront.data.remote.ApiClient
 import com.example.barriosmartfront.data.remote.CommunityApi
 
@@ -56,8 +58,17 @@ class CommunityRepository(
         return if (res.isSuccessful) res.body() ?: emptyList() else emptyList()
     }
 
-    suspend fun getReports(communityId: Int): List<Report> {
+    suspend fun getReports(communityId: Int): List<ReportResponse> {
         val res = api.getReports(communityId)
-        return if (res.isSuccessful) res.body() ?: emptyList() else emptyList()
+
+        if (res.isSuccessful) {
+            val reports = res.body() ?: emptyList()
+            // Imprimir en log
+            Log.d("ReportRepository", "Reports for community $communityId: $reports")
+            return reports
+        } else {
+            Log.e("ReportRepository", "Failed to get reports: ${res.code()} - ${res.message()}")
+            return emptyList()
+        }
     }
 }

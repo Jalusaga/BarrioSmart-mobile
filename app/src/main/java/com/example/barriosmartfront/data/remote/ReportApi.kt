@@ -1,9 +1,9 @@
 package com.example.barriosmartfront.data.remote
 
+import com.example.barriosmartfront.data.dto.auth.RegisterResponse
+import com.example.barriosmartfront.data.dto.community.CommunityResponse
 import com.example.barriosmartfront.data.dto.report.Report
-import com.example.barriosmartfront.data.dto.report.ReportCreate
 import com.example.barriosmartfront.data.dto.report.ReportResponse
-import com.example.barriosmartfront.data.dto.report.ReportUpdate
 import retrofit2.Response
 import retrofit2.http.Body
 import retrofit2.http.GET
@@ -31,4 +31,10 @@ interface ReportApi {
         @Path("id") id: Int,
         @Body updates: ReportResponse
     ): Report
+
+
+    @GET("users")
+    suspend fun getUsers(): Response<List<RegisterResponse>>
+    @GET("communities")
+    suspend fun getCommunities(): Response<List<CommunityResponse>>
 }
