@@ -1,7 +1,9 @@
 package com.example.barriosmartfront.data.repositories
 
+import android.util.Log
 import com.example.barriosmartfront.data.auth.AuthService
 import com.example.barriosmartfront.data.auth.ITokenStore
+import com.example.barriosmartfront.data.auth.SessionManager
 import com.example.barriosmartfront.data.auth.UsersService
 import com.example.barriosmartfront.data.dto.auth.LoginRequest
 import com.example.barriosmartfront.data.dto.auth.RegisterRequest
@@ -19,7 +21,10 @@ class AuthRepository(
     suspend fun login(email: String, password: String): Result<Unit> = safeApi {
         val res = authService.login(LoginRequest(email, password))
         tokenStore.save(res.access_token)
+        SessionManager.saveSession(email, res.access_token)
+        Log.d("AuthRepository", "Usuario logueado: ${SessionManager.getUserEmail()}")
     }
+
 
     // Register: crea usuario. Opcional: auto-login después de registrar.
     suspend fun register(
@@ -48,6 +53,7 @@ class AuthRepository(
     // Logout simple: borra el token
     suspend fun logout(): Result<Unit> = safeApi {
         tokenStore.clear()
+        SessionManager.clearSession()
     }
 
     // Helper para mapear errores a Result
