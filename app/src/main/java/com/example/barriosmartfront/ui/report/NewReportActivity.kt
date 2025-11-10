@@ -1,5 +1,7 @@
 package com.example.barriosmartfront.ui.report
 
+import android.Manifest
+import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
 import android.util.Log
@@ -40,6 +42,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
 import com.example.barriosmartfront.data.auth.DataStoreTokenStore
 import com.example.barriosmartfront.data.auth.SessionManager
 import com.example.barriosmartfront.data.dto.report.Report
@@ -51,9 +55,11 @@ import com.example.barriosmartfront.data.services.ReportTypesService
 import com.example.barriosmartfront.ui.community.CommunityViewModel
 import com.example.barriosmartfront.ui.theme.SeguridadTheme
 import com.example.barriosmartfront.ui.types.ReportTypeViewModel
+import com.google.android.gms.maps.model.CameraPosition
+import com.google.android.gms.maps.model.LatLng
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
-
+import com.google.maps.android.compose.*
 
 class NewReportActivity: ComponentActivity() {
     private val tokenStore by lazy { DataStoreTokenStore(applicationContext) }
@@ -68,6 +74,17 @@ class NewReportActivity: ComponentActivity() {
     @RequiresApi(Build.VERSION_CODES.O)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        // Pedir permisos de ubicación
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
+            != PackageManager.PERMISSION_GRANTED
+        ) {
+            ActivityCompat.requestPermissions(
+                this,
+                arrayOf(Manifest.permission.ACCESS_FINE_LOCATION),
+                1
+            )
+        }
 
         val reportsRepo = ReportsRepository(tokenStore)
         val communityRepo = CommunityRepository(tokenStore)
@@ -119,7 +136,10 @@ fun NewReportRoute(
     var timeString by remember { mutableStateOf(currentTime) }
     var selectedIncidentType by remember { mutableStateOf("") }
     var selectedCommunity by remember { mutableStateOf("") }
-    var locationString by remember { mutableStateOf("") }
+
+    // Ubicación
+    var selectedLat by remember { mutableStateOf<Double?>(null) }
+    var selectedLng by remember { mutableStateOf<Double?>(null) }
 
     var isAnonymousCheck by remember { mutableStateOf(false) }
 
@@ -172,6 +192,8 @@ fun NewReportRoute(
                                 status = "pending",
                                 occurred_at = occurredAtIso,
                                 description = uiState.description?.ifEmpty { null },
+                                latitude = selectedLat?:0.0,
+                                longitude = selectedLng?:0.0,
                                 reported_by_user_id = reportedById,
                                 approved_by_user_id = null
                             )
@@ -198,6 +220,8 @@ fun NewReportRoute(
             )
         }
     ) { paddingValues ->
+
+
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -282,14 +306,15 @@ fun NewReportRoute(
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // Ubicación
-            OutlinedTextField(
-                value = locationString,
-                onValueChange = { locationString = it },
-                label = { Text("Ubicación del incidente") },
-                modifier = Modifier.fillMaxWidth()
-            )
 
+            LocationPicker(
+                latitude = selectedLat,
+                longitude = selectedLng,
+                onLocationSelected = { lat, lng ->
+                    selectedLat = lat
+                    selectedLng = lng
+                }
+            )
             Spacer(modifier = Modifier.height(24.dp))
         }
     }
@@ -381,4 +406,40 @@ fun getCurrentDateTimeStrings(): Pair<String, String> {
     val date = now.format(dateFormatter)
     val time = now.format(timeFormatter)
     return Pair(date, time)
+}
+
+
+@Composable
+fun LocationPicker(
+    latitude: Double?,
+    longitude: Double?,
+    onLocationSelected: (Double, Double) -> Unit
+) {
+    var mapProperties by remember { mutableStateOf(MapProperties(isMyLocationEnabled = true)) }
+    var mapUiSettings by remember { mutableStateOf(MapUiSettings(zoomControlsEnabled = true)) }
+
+    val cameraPositionState = rememberCameraPositionState {
+        position = CameraPosition.fromLatLngZoom(
+            LatLng(latitude ?: 9.935, longitude ?: -84.091), 15f
+        )
+    }
+
+    GoogleMap(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(300.dp),
+        properties = mapProperties,
+        uiSettings = mapUiSettings,
+        cameraPositionState = cameraPositionState,
+        onMapClick = { latLng ->
+            onLocationSelected(latLng.latitude, latLng.longitude)
+        }
+    ) {
+        if (latitude != null && longitude != null) {
+            Marker(
+                state = MarkerState(position = LatLng(latitude, longitude)),
+                title = "Ubicación seleccionada"
+            )
+        }
+    }
 }

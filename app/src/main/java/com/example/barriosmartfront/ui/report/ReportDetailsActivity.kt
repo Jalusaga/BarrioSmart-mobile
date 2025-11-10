@@ -54,6 +54,10 @@ import com.example.barriosmartfront.data.services.ReportTypesService
 import com.example.barriosmartfront.ui.community.CommunityViewModel
 import com.example.barriosmartfront.ui.theme.SeguridadTheme
 import com.example.barriosmartfront.ui.types.ReportTypeViewModel
+import com.google.android.gms.maps.model.LatLng
+import com.google.maps.android.compose.GoogleMap
+import com.google.maps.android.compose.Marker
+import com.google.maps.android.compose.rememberCameraPositionState
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 
@@ -130,7 +134,8 @@ fun ReportDetailsScreen(
     // Estados de edición
     var isEditing by remember { mutableStateOf(false) }
     var uiState by remember { mutableStateOf(report) }
-
+    var selectedLat by remember { mutableStateOf(report.latitude) }
+    var selectedLng by remember { mutableStateOf(report.longitude) }
     var dateString by remember { mutableStateOf(report.occurred_at.take(10)) }
     var timeString by remember { mutableStateOf(report.occurred_at.takeLast(5)) }
 
@@ -235,7 +240,9 @@ fun ReportDetailsScreen(
                 Text("Reporte Anónimo", modifier = Modifier.weight(1f))
                 Switch(
                     checked = isAnonymousCheck,
-                    onCheckedChange = { if (isEditing) isAnonymousCheck = it }, // solo cambia si isEditing
+                    onCheckedChange = {
+                        if (isEditing) isAnonymousCheck = it
+                    }, // solo cambia si isEditing
                     enabled = isEditing // desactiva visualmente cuando no se puede editar
                 )
 
@@ -271,8 +278,20 @@ fun ReportDetailsScreen(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(16.dp)
             ) {
-                DateTimeInputField("Fecha", dateString, { if (isEditing) dateString = it }, "yyyy-MM-dd", Modifier.weight(1f))
-                DateTimeInputField("Hora", timeString, { if (isEditing) timeString = it }, "HH:mm", Modifier.weight(1f))
+                DateTimeInputField(
+                    "Fecha",
+                    dateString,
+                    { if (isEditing) dateString = it },
+                    "yyyy-MM-dd",
+                    Modifier.weight(1f)
+                )
+                DateTimeInputField(
+                    "Hora",
+                    timeString,
+                    { if (isEditing) timeString = it },
+                    "HH:mm",
+                    Modifier.weight(1f)
+                )
             }
 
             Spacer(modifier = Modifier.height(16.dp))
@@ -295,9 +314,53 @@ fun ReportDetailsScreen(
                 enabled = isEditing
             )
 
-            Spacer(modifier = Modifier.height(24.dp))
-        }
+            Spacer(modifier = Modifier.height(16.dp))
+            if (selectedLat != null && selectedLng != null) {
+                val location = LatLng(selectedLat!!, selectedLng!!)
+                val cameraPositionState = rememberCameraPositionState {
+                    position = com.google.android.gms.maps.model.CameraPosition.fromLatLngZoom(
+                        location,
+                        15f
+                    )
+                }
 
+                Text(
+                    text = "Ubicación del incidente",
+                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold)
+                )
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(250.dp)
+                ) {
+                    GoogleMap(
+                        modifier = Modifier.matchParentSize(),
+                        cameraPositionState = cameraPositionState,
+                        onMapClick = { latLng ->
+                            if (isEditing) {
+                                selectedLat = latLng.latitude
+                                selectedLng = latLng.longitude
+                            }
+                        }
+                    ) {
+                        Marker(
+                            state = com.google.maps.android.compose.MarkerState(
+                                position = LatLng(
+                                    selectedLat!!,
+                                    selectedLng!!
+                                )
+                            ),
+                            title = "Ubicación reportada"
+                        )
+                    }
+                }
+            } else {
+                Text("No se registró ubicación en este reporte.")
+            }
+        }
 
     }
 }
