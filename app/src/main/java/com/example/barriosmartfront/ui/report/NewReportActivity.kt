@@ -202,13 +202,12 @@ fun NewReportRoute(
                             onCreateSuccess()
                         },
                         colors = ButtonDefaults.buttonColors(
-                            containerColor = MaterialTheme.colorScheme.secondary,
                             contentColor = Color.White
                         ),
                         shape = RoundedCornerShape(8.dp),
                         modifier = Modifier.padding(end = 8.dp)
                     ) {
-                        Text("Crear")
+                        Text("+ Crear")
                     }
                 },
                 colors = TopAppBarDefaults.centerAlignedTopAppBarColors(

@@ -1,10 +1,14 @@
 package com.example.barriosmartfront.ui.home
 
 import android.content.Intent
+import android.content.pm.PackageManager
+import android.net.Uri
 import android.os.Bundle
 import android.widget.Toast
 import androidx.activity.ComponentActivity
+import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
@@ -22,11 +26,9 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Group
 import androidx.compose.material.icons.filled.ReportProblem
 import androidx.compose.material.icons.filled.Security
-import androidx.compose.material.ripple.rememberRipple
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.NavigationBarItemDefaults
@@ -43,25 +45,70 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.barriosmartfront.data.auth.DataStoreTokenStore
+import androidx.core.content.ContextCompat
 import com.example.barriosmartfront.data.dto.auth.NavItem
-import com.example.barriosmartfront.data.remote.ApiClient
 import com.example.barriosmartfront.ui.authorities.AuthoritiesActivity
 import com.example.barriosmartfront.ui.community.CommunityActivity
 import com.example.barriosmartfront.ui.report.ReportActivity
 
 import com.example.barriosmartfront.ui.theme.SeguridadTheme
 import com.example.barriosmartfront.ui.theme.SurfaceSoft
+import android.Manifest
+import androidx.compose.material3.MaterialTheme
 
 class HomeActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
             SeguridadTheme {
-                // Llamamos al composable que está definido aparte
+                val context = this
+
+                // 🔹 Declarar launcher para pedir permiso
+                val callPermissionLauncher = rememberLauncherForActivityResult(
+                    contract = ActivityResultContracts.RequestPermission()
+                ) { isGranted ->
+                    if (isGranted) {
+                        Toast.makeText(
+                            context,
+                            "Contactando a las autoridades...",
+                            Toast.LENGTH_SHORT
+                        ).show()
+
+                        val intent = Intent(Intent.ACTION_CALL).apply {
+                            data = Uri.parse("tel:911") // Cambia por el número real
+                        }
+                        context.startActivity(intent)
+                    } else {
+                        Toast.makeText(
+                            context,
+                            "Permiso para llamadas denegado",
+                            Toast.LENGTH_SHORT
+                        )
+                            .show()
+                    }
+                }
+
+                // 🔹 Pasar la lógica de llamada al botón SOS
                 HomeRoute(
                     onButtonClick = {
-                        Toast.makeText(this, "Avisando a las personas de la comunidad", Toast.LENGTH_LONG).show()
+                        if (ContextCompat.checkSelfPermission(
+                                context,
+                                Manifest.permission.CALL_PHONE
+                            ) == PackageManager.PERMISSION_GRANTED
+                        ) {
+                            Toast.makeText(
+                                context,
+                                "Contactando a las autoridades...",
+                                Toast.LENGTH_SHORT
+                            ).show()
+
+                            val intent = Intent(Intent.ACTION_CALL).apply {
+                                data = Uri.parse("tel:911")
+                            }
+                            context.startActivity(intent)
+                        } else {
+                            callPermissionLauncher.launch(Manifest.permission.CALL_PHONE)
+                        }
                     }
                 )
             }
@@ -74,7 +121,6 @@ fun HomeRoute(
     onButtonClick: () -> Unit
 ) {
     val context = LocalContext.current
-    val interactionSource = remember { MutableInteractionSource() }
 
     val menuItems = listOf(
         NavItem("Comunidades", Icons.Filled.Group),

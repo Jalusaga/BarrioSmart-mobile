@@ -125,7 +125,6 @@ fun ReportListRoute(
                     Button(
                         onClick = onCreateNewReport,
                         colors = ButtonDefaults.buttonColors(
-                            containerColor = MaterialTheme.colorScheme.secondary,
                             contentColor = Color.White
                         ),
                         shape = RoundedCornerShape(8.dp),
