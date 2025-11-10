@@ -4,9 +4,12 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 data class Member(
-    val id: Long,             // ID del usuario
-    val initials: String,     // Iniciales o avatar
-    val fullName: String,     // Nombre completo
-    val joinedAt: String,     // Fecha de ingreso a la comunidad
-    val role: String? = null  // Opcional: rol dentro de la comunidad
+    val id: Long? = null,                 // puede ser nulo
+    val full_name: String? = null,        // opcional
+    val email: String? = null,            // opcional
+    val phone: String? = null,            // opcional
+    val is_admin: Boolean = false,        // valor por defecto
+    val is_active: Boolean = true,        // valor por defecto
+    val created_at: String? = null,       // opcional
+    val updated_at: String? = null        // opcional
 )

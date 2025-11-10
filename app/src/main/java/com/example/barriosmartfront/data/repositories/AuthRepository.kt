@@ -19,11 +19,22 @@ class AuthRepository(
 
     // Login: guarda token en DataStore
     suspend fun login(email: String, password: String): Result<Unit> = safeApi {
+
         val res = authService.login(LoginRequest(email, password))
         tokenStore.save(res.access_token)
-        SessionManager.saveSession(email, res.access_token)
-        Log.d("AuthRepository", "Usuario logueado: ${SessionManager.getUserEmail()}")
+
+        // Obtener datos del usuario actual
+        val user = usersService.getCurrentUser(email)
+
+        SessionManager.saveSession(email, res.access_token, user.id ?: 0, user.full_name ?: "")
+
+        // Log para depuración
+        android.util.Log.d(
+            "AuthRepository",
+            "Usuario logueado: ${SessionManager.getUserEmail()} (ID=${SessionManager.getUserEmail()})"
+        )
     }
+
 
 
     // Register: crea usuario. Opcional: auto-login después de registrar.

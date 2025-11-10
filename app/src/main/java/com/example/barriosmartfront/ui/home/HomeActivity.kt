@@ -2,6 +2,7 @@ package com.example.barriosmartfront.ui.home
 
 import android.content.Intent
 import android.os.Bundle
+import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.background
@@ -60,8 +61,7 @@ class HomeActivity : ComponentActivity() {
                 // Llamamos al composable que está definido aparte
                 HomeRoute(
                     onButtonClick = {
-                        // Aquí defines la acción del botón
-                        // Por ejemplo: mostrar un log o navegar
+                        Toast.makeText(this, "Avisando a las personas de la comunidad", Toast.LENGTH_LONG).show()
                     }
                 )
             }

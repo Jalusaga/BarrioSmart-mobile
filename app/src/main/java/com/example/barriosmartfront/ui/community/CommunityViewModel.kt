@@ -2,9 +2,11 @@ package com.example.barriosmartfront.ui.community
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.barriosmartfront.data.dto.community.Community
 import com.example.barriosmartfront.data.dto.community.CommunityCreate
 import com.example.barriosmartfront.data.dto.community.CommunityUpdate
 import com.example.barriosmartfront.data.dto.community.CommunityResponse
+import com.example.barriosmartfront.data.dto.member.Member
 import com.example.barriosmartfront.data.repositories.CommunityRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -23,6 +25,13 @@ class CommunityViewModel(
     private val _error = MutableStateFlow<String?>(null)
     val error: StateFlow<String?> = _error
 
+    private val _community = MutableStateFlow<CommunityResponse?>(null)
+    val community: StateFlow<CommunityResponse?> = _community
+
+
+    private val _members = MutableStateFlow<List<Member>>(emptyList())
+    val members: StateFlow<List<Member>> = _members
+
     fun loadCommunities() {
         viewModelScope.launch {
             _loading.value = true
@@ -37,6 +46,8 @@ class CommunityViewModel(
             }
         }
     }
+
+
 
     fun createCommunity(name: String, description: String) {
         viewModelScope.launch {

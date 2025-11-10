@@ -27,6 +27,7 @@ class CommunityRepository(
         return if (res.isSuccessful) res.body() else null
     }
 
+
     suspend fun getById(id: Int): CommunityResponse? {
         val response = api.getCommunity(id)
         return if (response.isSuccessful) {
@@ -55,7 +56,14 @@ class CommunityRepository(
 
     suspend fun getMembers(communityId: Int): List<Member> {
         val res = api.getMembers(communityId)
-        return if (res.isSuccessful) res.body() ?: emptyList() else emptyList()
+        return if (res.isSuccessful) {
+            val body = res.body() ?: emptyList()
+            println(">>> miembros cargados correctamente: ${body.size}")
+            body
+        } else {
+            println("❌ Error al cargar miembros: ${res.code()} ${res.message()}")
+            emptyList()
+        }
     }
 
     suspend fun getReports(communityId: Int): List<ReportResponse> {
@@ -69,6 +77,34 @@ class CommunityRepository(
         } else {
             Log.e("ReportRepository", "Failed to get reports: ${res.code()} - ${res.message()}")
             return emptyList()
+        }
+    }
+
+
+    suspend fun getCommunityDetails(id: Int): CommunityResponse? {
+        return try {
+            // Obtener la comunidad base
+            val communityResponse = api.getCommunity(id)
+            if (!communityResponse.isSuccessful) return null
+
+            val community = communityResponse.body() ?: return null
+
+            // Obtener miembros y reportes (de forma secuencial)
+            val members = getMembers(id)
+            val reports = getReports(id)
+
+            // Combinar todo en un solo objeto
+            CommunityResponse(
+                id = community.id,
+                name = community.name,
+                description = community.description,
+                is_active = community.is_active,
+                members = members,
+                reports = reports
+            )
+        } catch (e: Exception) {
+            Log.e("CommunityRepository", "Error al obtener detalles de comunidad", e)
+            null
         }
     }
 }

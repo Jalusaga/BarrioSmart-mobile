@@ -22,7 +22,7 @@ data class Report(
     val occurred_at: String = "",    // datetime
     val status: String = "",         // enum('pending','approved','rejected')
     val is_panic: Boolean = false,             // tinyint(1)
-    val reported_by_user_id: Int? = 0,      // bigint, puede ser null
+    val reported_by_user_id: Long? = 0,      // bigint, puede ser null
     val approved_by_user_id: Int? = 0,
 )
 

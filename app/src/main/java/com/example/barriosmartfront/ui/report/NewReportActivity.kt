@@ -2,6 +2,7 @@ package com.example.barriosmartfront.ui.report
 
 import android.os.Build
 import android.os.Bundle
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.annotation.RequiresApi
@@ -40,6 +41,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.example.barriosmartfront.data.auth.DataStoreTokenStore
+import com.example.barriosmartfront.data.auth.SessionManager
 import com.example.barriosmartfront.data.dto.report.Report
 import com.example.barriosmartfront.data.remote.ApiClient
 import com.example.barriosmartfront.data.repositories.CommunityRepository
@@ -161,8 +163,9 @@ fun NewReportRoute(
                                 LocalDateTime.now().format(DateTimeFormatter.ISO_LOCAL_DATE_TIME)
                             }
 
-                            val reportedById: Int? = if (isAnonymousCheck) 1 else 4 //Cambiar el 4 por el id real del usuario
+                            val reportedById: Long? = if (isAnonymousCheck) 1 else SessionManager.userId() //Cambiar el 4 por el id real del usuario
 
+                            Log.d("REPORTADO POR", reportedById.toString())
                             val newReport = uiState.copy(
                                 community_id = communityId,
                                 type_id = typeId,

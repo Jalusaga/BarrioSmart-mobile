@@ -31,26 +31,50 @@ class CommunityDetailsViewModel(
     private val _error = MutableStateFlow<String?>(null)
     val error: StateFlow<String?> = _error
 
-    fun loadCommunityDetails(communityId: Int) {
+    // --- Cargar detalles de una comunidad ---
+    fun loadCommunityDetails(id: Int) {
         viewModelScope.launch {
             _loading.value = true
             _error.value = null
             try {
-                val communityData = repository.getById(communityId)
-                _community.value = communityData
-
-                val membersData = repository.getMembers(communityId)
-                _members.value = membersData
-
-                val reportsData = repository.getReports(communityId)
-                _reports.value = reportsData
-
-                Log.d("CommunityDetailsVM", "Reportes cargados: ${reports.value}")
-
+                val result = repository.getCommunityDetails(id)
+                if (result != null) {
+                    _community.value = result
+                } else {
+                    _error.value = "No se encontró la comunidad"
+                }
             } catch (e: Exception) {
                 _error.value = e.message
             } finally {
                 _loading.value = false
+            }
+        }
+    }
+
+    // --- Cargar miembros de una comunidad específica ---
+    fun loadMembers(communityId: Int) {
+        viewModelScope.launch {
+            _loading.value = true
+            _error.value = null
+            try {
+                val result = repository.getMembers(communityId)
+                _members.value = result ?: emptyList()
+            } catch (e: Exception) {
+                _error.value = "Error al obtener miembros: ${e.message}"
+            } finally {
+                _loading.value = false
+            }
+        }
+    }
+
+
+    fun loadReports(id: Int) {
+        viewModelScope.launch {
+            try {
+                val data = repository.getReports(id)
+                _reports.value = data ?: emptyList()
+            } catch (e: Exception) {
+                _error.value = "Error al cargar reportes: ${e.message}"
             }
         }
     }

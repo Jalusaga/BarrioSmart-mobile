@@ -28,11 +28,10 @@ interface CommunityApi {
         @Body updates: CommunityUpdate
     ): Response<Community>
 
-    @GET("communities/{id}/members")
-    suspend fun getMembers(@Path("id") communityId: Int): Response<List<Member>>
+    @GET("community-members/{community_id}")
+    suspend fun getMembers(@Path("community_id") communityId: Int): Response<List<Member>>
 
     @GET("reports/community/{community_id}")
     suspend fun getReports(@Path("community_id") communityId: Int): Response<List<ReportResponse>>
-
 
 }
