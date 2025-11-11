@@ -38,7 +38,7 @@ class CommunityActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        // 🧩 Instancias necesarias para el ViewModel
+        // Instancias necesarias para el ViewModel
         val tokenStore = DataStoreTokenStore(this)
         val repository = CommunityRepository(tokenStore)
         viewModel = CommunityViewModel(repository)
@@ -158,7 +158,7 @@ fun CommunityRoute(
     val isLoading by viewModel.loading.collectAsState()
     val error by viewModel.error.collectAsState()
 
-    // 🔁 Cargar comunidades al iniciar
+    // Cargar comunidades al iniciar
     LaunchedEffect(Unit) {
         viewModel.loadCommunities()
     }

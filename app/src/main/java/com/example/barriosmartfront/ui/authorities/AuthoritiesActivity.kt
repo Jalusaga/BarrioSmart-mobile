@@ -1,6 +1,10 @@
 package com.example.barriosmartfront.ui.authorities
 
 
+import android.Manifest
+import android.content.Intent
+import android.content.pm.PackageManager
+import android.net.Uri
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -20,6 +24,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
 import com.example.barriosmartfront.data.auth.DataStoreTokenStore
 import com.example.barriosmartfront.ui.theme.ScreenHeader
 import com.example.barriosmartfront.ui.theme.SeguridadTheme
@@ -64,16 +70,36 @@ class AuthoritiesActivity : ComponentActivity() {
 
         setContent {
             SeguridadTheme {
-                // Llamamos al composable que está definido aparte
-                AuthoritiesRoute(  onBackClick = { finish() }, authorities )
+                AuthoritiesRoute(
+                    onBackClick = { finish() },
+                    authorities = authorities,
+                    onCallNumber = { number -> makePhoneCall(number) }
+                )
             }
         }
     }
+
+    private fun makePhoneCall(phoneNumber: String) {
+        // Verifica si el permiso ya fue otorgado
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.CALL_PHONE)
+            != PackageManager.PERMISSION_GRANTED
+        ) {
+            // Si no, lo solicita
+            ActivityCompat.requestPermissions(this, arrayOf(Manifest.permission.CALL_PHONE), 1)
+        } else {
+            // Si ya está concedido, realiza la llamada
+            val intent = Intent(Intent.ACTION_CALL)
+            intent.data = Uri.parse("tel:$phoneNumber")
+            startActivity(intent)
+        }
+    }
+
+
 }
 
 
 @Composable
-fun AuthorityCard(info: Authority) {
+fun AuthorityCard(info: Authority,  onCallNumber: (String) -> Unit) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -123,7 +149,7 @@ fun AuthorityCard(info: Authority) {
 
             // Botón "Llamar"
             Button(
-                onClick = { /* Lógica de llamada: Ejemplo: dialer.dial(info.phone) */ },
+                onClick = { onCallNumber(info.phone)  },
                 colors = ButtonDefaults.buttonColors(containerColor = info.iconColor)
             ) {
                 Text("Llamar")
@@ -137,7 +163,7 @@ fun AuthorityCard(info: Authority) {
 // =========================================================================
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun AuthoritiesRoute(onBackClick: () -> Unit = {}, authorities: List<Authority>) {
+fun AuthoritiesRoute(onBackClick: () -> Unit = {}, authorities: List<Authority>, onCallNumber: (String) -> Unit) {
 
     Scaffold(
         topBar = {
@@ -183,7 +209,7 @@ fun AuthoritiesRoute(onBackClick: () -> Unit = {}, authorities: List<Authority>)
                         modifier = Modifier.padding(top = 4.dp, bottom = 12.dp)
                     )
                     Button(
-                        onClick = { /* Lógica de llamada al 911 */ },
+                        onClick = { onCallNumber("911") },
                         modifier = Modifier.fillMaxWidth(),
                         colors = ButtonDefaults.buttonColors(containerColor = Color.Red)
                     ) {
@@ -202,11 +228,12 @@ fun AuthoritiesRoute(onBackClick: () -> Unit = {}, authorities: List<Authority>)
                     backgroundColor = Color(0xFFFBE9E7),
                     icon = Icons.Filled.Call,
                     iconColor = Color(0xFFE53935)
-                )
+                ),
+                onCallNumber = { number -> onCallNumber(number) }
             )
 
             authorities.forEach { info ->
-                AuthorityCard(info = info)
+                AuthorityCard(info = info, onCallNumber = onCallNumber)
             }
 
             // -------------------- Información Importante --------------------

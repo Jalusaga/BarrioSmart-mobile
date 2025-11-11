@@ -61,7 +61,7 @@ class CommunityRepository(
             println(">>> miembros cargados correctamente: ${body.size}")
             body
         } else {
-            println("❌ Error al cargar miembros: ${res.code()} ${res.message()}")
+            println("Error al cargar miembros: ${res.code()} ${res.message()}")
             emptyList()
         }
     }

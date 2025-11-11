@@ -8,9 +8,11 @@ import com.example.barriosmartfront.data.dto.community.CommunityUpdate
 import com.example.barriosmartfront.data.dto.community.CommunityResponse
 import com.example.barriosmartfront.data.dto.member.Member
 import com.example.barriosmartfront.data.repositories.CommunityRepository
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 class CommunityViewModel(
     private val repository: CommunityRepository
@@ -37,7 +39,9 @@ class CommunityViewModel(
             _loading.value = true
             _error.value = null
             try {
-                val data = repository.getAll()
+                val data = withContext(Dispatchers.IO) {
+                    repository.getAll()
+                }
                 _communities.value = data ?: emptyList()
             } catch (e: Exception) {
                 _error.value = e.message

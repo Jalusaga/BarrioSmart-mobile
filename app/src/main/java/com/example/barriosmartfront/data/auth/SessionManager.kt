@@ -15,6 +15,7 @@ object SessionManager {
 
     fun getToken(): String? = token
     fun getUserEmail(): String? = userEmail
+    fun getUserName(): String? = userName
     fun clearSession() {
         token = null
         userEmail = null
