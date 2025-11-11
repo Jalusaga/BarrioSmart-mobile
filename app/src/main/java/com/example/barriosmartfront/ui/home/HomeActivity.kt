@@ -54,16 +54,70 @@ import com.example.barriosmartfront.ui.report.ReportActivity
 import com.example.barriosmartfront.ui.theme.SeguridadTheme
 import com.example.barriosmartfront.ui.theme.SurfaceSoft
 import android.Manifest
+import android.annotation.SuppressLint
+import android.content.Context
+import android.location.Location
 import androidx.compose.material3.MaterialTheme
+import com.example.barriosmartfront.data.auth.SessionManager
+import com.google.android.gms.location.FusedLocationProviderClient
+import com.google.android.gms.location.LocationServices
+import android.app.NotificationManager
+import android.app.NotificationChannel
+import android.content.BroadcastReceiver
+import androidx.core.app.NotificationCompat
 
 class HomeActivity : ComponentActivity() {
+    private lateinit var fusedLocationClient: FusedLocationProviderClient
+    private var sentReceiverRef: BroadcastReceiver? = null
+    private var deliveredReceiverRef: BroadcastReceiver? = null
+
+    override fun onDestroy() {
+        super.onDestroy()
+        sentReceiverRef?.let { unregisterReceiver(it) }
+        deliveredReceiverRef?.let { unregisterReceiver(it) }
+    }
+
+    private fun createNotificationChannel() {
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+            val channel = NotificationChannel(
+                "panic_channel",
+                "Alertas de emergencia",
+                NotificationManager.IMPORTANCE_HIGH
+            ).apply {
+                description = "Notificaciones de envío y entrega de mensajes de emergencia"
+            }
+
+            val manager = getSystemService(NotificationManager::class.java)
+            manager.createNotificationChannel(channel)
+        }
+    }
+
+    private fun showNotification(title: String, message: String) {
+        val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+
+        val builder = NotificationCompat.Builder(this, "panic_channel")
+            .setSmallIcon(android.R.drawable.ic_dialog_alert)
+            .setContentTitle(title)
+            .setContentText(message)
+            .setPriority(NotificationCompat.PRIORITY_HIGH)
+            .setAutoCancel(true)
+
+        notificationManager.notify(System.currentTimeMillis().toInt(), builder.build())
+    }
+
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        createNotificationChannel()
+
+        fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
+
+
         setContent {
             SeguridadTheme {
                 val context = this
 
-                // 🔹 Declarar launcher para pedir permiso
+                // Declarar launcher para pedir permiso
                 val callPermissionLauncher = rememberLauncherForActivityResult(
                     contract = ActivityResultContracts.RequestPermission()
                 ) { isGranted ->
@@ -87,33 +141,101 @@ class HomeActivity : ComponentActivity() {
                             .show()
                     }
                 }
+                // Launcher para solicitar permiso de SMS
+                val smsPermissionLauncher = rememberLauncherForActivityResult(
+                    contract = ActivityResultContracts.RequestPermission()
+                ) { isGranted ->
+                    if (isGranted) {
+                        sendEmergencySMS("911") // o número de contacto de emergencia
+                    } else {
+                        Toast.makeText(context, "Permiso para enviar SMS denegado", Toast.LENGTH_SHORT).show()
+                    }
+                }
 
-                // 🔹 Pasar la lógica de llamada al botón SOS
+                // Pasar la lógica de llamada al botón SOS
                 HomeRoute(
                     onButtonClick = {
-                        if (ContextCompat.checkSelfPermission(
-                                context,
-                                Manifest.permission.CALL_PHONE
-                            ) == PackageManager.PERMISSION_GRANTED
+                        // Primero enviar SMS, luego llamar
+                        if (ContextCompat.checkSelfPermission(context, Manifest.permission.SEND_SMS)
+                            == PackageManager.PERMISSION_GRANTED
                         ) {
-                            Toast.makeText(
-                                context,
-                                "Contactando a las autoridades...",
-                                Toast.LENGTH_SHORT
-                            ).show()
-
-                            val intent = Intent(Intent.ACTION_CALL).apply {
-                                data = Uri.parse("tel:911")
-                            }
-                            context.startActivity(intent)
+                            sendEmergencySMS("911")
                         } else {
-                            callPermissionLauncher.launch(Manifest.permission.CALL_PHONE)
+                            smsPermissionLauncher.launch(Manifest.permission.SEND_SMS)
                         }
+
+                        /*if (ContextCompat.checkSelfPermission(context, Manifest.permission.CALL_PHONE)
+                            == PackageManager.PERMISSION_GRANTED
+                        ) {
+                            //makeEmergencyCall()
+                        } else {
+                            //callPermissionLauncher.launch(Manifest.permission.CALL_PHONE)
+                        }*/
                     }
                 )
             }
         }
     }
+
+    @SuppressLint("MissingPermission")
+    private fun sendEmergencySMS(phoneNumber: String) {
+        fusedLocationClient.lastLocation.addOnSuccessListener { location ->
+            val latitude = location?.latitude ?: 0.0
+            val longitude = location?.longitude ?: 0.0
+            val locationText = "https://maps.google.com/?q=$latitude,$longitude"
+            val nombre = SessionManager.getUserName() ?: "Usuario desconocido"
+
+            val message = """
+            🚨 Reporte de pánico 🚨
+            Necesito ayuda, mi nombre es $nombre.
+            Estoy ubicado en: $locationText
+        """.trimIndent()
+
+            val smsIntent = Intent(Intent.ACTION_SENDTO).apply {
+                data = Uri.parse("smsto:$phoneNumber") // Usa smsto: para SMS
+                putExtra("sms_body", message)
+            }
+
+            try {
+                startActivity(smsIntent)
+                Toast.makeText(this, "Abriendo app de mensajes...", Toast.LENGTH_SHORT).show()
+            } catch (e: Exception) {
+                Toast.makeText(this, "No se pudo abrir la app de SMS", Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
+
+    /*private fun fetchCurrentLocation(onLocationRetrieved: (Location?) -> Unit) {
+        if (ContextCompat.checkSelfPermission(
+                this,
+                Manifest.permission.ACCESS_FINE_LOCATION
+            ) != PackageManager.PERMISSION_GRANTED
+        ) {
+            Toast.makeText(this, "Permission de ubicación no otorgado", Toast.LENGTH_SHORT).show()
+            onLocationRetrieved(null)
+            return
+        }
+
+        fusedLocationClient.lastLocation
+            .addOnSuccessListener { location ->
+                onLocationRetrieved(location)
+            }
+            .addOnFailureListener {
+                Toast.makeText(this, "Error obteniendo ubicación", Toast.LENGTH_SHORT).show()
+                onLocationRetrieved(null)
+            }
+    }
+
+
+    //  Realiza la llamada
+    private fun makeEmergencyCall() {
+        Toast.makeText(this, "Contactando a las autoridades...", Toast.LENGTH_SHORT).show()
+        val intent = Intent(Intent.ACTION_CALL).apply {
+            data = Uri.parse("tel:911")
+        }
+        startActivity(intent)
+    }
+*/
 }
 
 @Composable

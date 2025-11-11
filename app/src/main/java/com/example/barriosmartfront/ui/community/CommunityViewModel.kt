@@ -8,9 +8,11 @@ import com.example.barriosmartfront.data.dto.community.CommunityUpdate
 import com.example.barriosmartfront.data.dto.community.CommunityResponse
 import com.example.barriosmartfront.data.dto.member.Member
 import com.example.barriosmartfront.data.repositories.CommunityRepository
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 class CommunityViewModel(
     private val repository: CommunityRepository
@@ -40,8 +42,10 @@ class CommunityViewModel(
             _error.value = null
             try {
                 // 1. cargar comunidades
-                val list = repository.getAll() ?: emptyList()
-                _communities.value = list
+                val data = withContext(Dispatchers.IO) {
+                    repository.getAll()
+                }
+                _communities.value = data ?: emptyList()
 
                 // 2. cargar memberships del usuario actual
                 val joinedIds = repository.getJoinedCommunityIdsForCurrentUser()

@@ -91,6 +91,7 @@ class NewReportActivity: ComponentActivity() {
         val reportTypeRepo = ReportTypeRepository(typesService)
 
         reportViewModel = ReportViewModel(reportsRepo)
+        reportViewModel.fetchReports()
         communityViewModel = CommunityViewModel(communityRepo)
         reportTypeViewModel = ReportTypeViewModel(reportTypeRepo)
 
@@ -104,8 +105,13 @@ class NewReportActivity: ComponentActivity() {
                     reportViewModel = reportViewModel,
                     communityViewModel = communityViewModel,
                     reportTypeViewModel = reportTypeViewModel,
-                    onBackClick = { finish() },
-                    onCreateSuccess = { finish() }
+                    onBackClick = {
+                        setResult(RESULT_OK)
+                        finish()},
+                    onCreateSuccess = {
+                        setResult(RESULT_OK)
+                        finish()
+                    }
                 )
             }
         }
@@ -172,7 +178,7 @@ fun NewReportRoute(
                     Button(
                         onClick = {
                             val typeId = reportTypes.find { it.display_name == selectedIncidentType }?.id ?: 0
-                            val communityId = 1
+                            val communityId = communities.find { it.name == selectedCommunity }?.id ?: 0
 
                             val occurredAtIso = runCatching {
                                 LocalDateTime.parse(

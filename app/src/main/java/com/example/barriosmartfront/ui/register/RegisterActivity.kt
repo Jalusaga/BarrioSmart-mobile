@@ -83,7 +83,7 @@ fun RegisterRoute(
     LaunchedEffect(registered) {
         if (registered) {
             snackbarHostState.showSnackbar(
-                message = "✅ Usuario creado",
+                message = "Usuario creado",
                 actionLabel = "OK",
                 withDismissAction = true,
                 duration = SnackbarDuration.Short

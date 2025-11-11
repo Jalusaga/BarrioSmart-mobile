@@ -10,6 +10,7 @@ import androidx.compose.ui.unit.dp
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -52,8 +53,17 @@ class ReportActivity : ComponentActivity() {
     private val typesRepo by lazy { ReportTypeRepository(typesService) }
     private val typesVm by lazy { ReportTypeViewModel(typesRepo) }
 
+    private val refreshReportsLauncher = registerForActivityResult(
+        ActivityResultContracts.StartActivityForResult()
+    ) { result ->
+        if (result.resultCode == RESULT_OK) {
+            reportsVm.fetchReports()
+        }
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        reportsVm.fetchReports()
         val repository = CommunityRepository(tokenStore)
         communitiesVm = CommunityViewModel(repository)
 
@@ -73,7 +83,7 @@ class ReportActivity : ComponentActivity() {
 
     private fun navigateToNewReport() {
         val intent = Intent(this, NewReportActivity::class.java)
-        startActivity(intent)
+        refreshReportsLauncher.launch(intent)
     }
 
     private fun navigateToReportDetails(reportId: Int) {
@@ -108,8 +118,16 @@ fun ReportListRoute(
     val isLoading by vm.isLoading.collectAsState()
     val error by vm.error.collectAsState()
 
-    val communitiesMap by remember(communities) { mutableStateOf(communities.associate { it.id to it.name }) }
-    val typesMap by remember(reportTypes) { mutableStateOf(reportTypes.associate { it.id to it.display_name }) }
+    val communitiesMap = remember(communities) { communities.associate { it.id to it.name } }
+    val typesMap = remember(reportTypes) { reportTypes.associate { it.id to it.display_name } }
+
+    // <-- Generamos las opciones usando map pero con lambda nombrada (evita posible inferencia fallida)
+    val communityOptions: List<String> = remember(communities) {
+        listOf("Todos") + communities.map { c -> c.name }
+    }
+    val typeOptions: List<String> = remember(reportTypes) {
+        listOf("Todos") + reportTypes.map { t -> t.display_name }
+    }
 
     var searchText by remember { mutableStateOf("") }
     var selectedCommunity by remember { mutableStateOf("Todos") }
@@ -154,8 +172,19 @@ fun ReportListRoute(
                 selectedType = selectedType,
                 onCommunityChange = { selectedCommunity = it },
                 onStatusChange = { selectedStatus = it },
-                onTypeChange = { selectedType = it }
+                onTypeChange = { selectedType = it },
+                communityOptions = communityOptions,
+                typeOptions = typeOptions
             )
+
+            val filteredReports = remember(reports, searchText, selectedType, selectedCommunity, selectedStatus) {
+                reports.filter {
+                    it.title.contains(searchText, ignoreCase = true) &&
+                            (selectedType == "Todos" || typesMap[it.type_id]?.equals(selectedType, ignoreCase = true) == true) &&
+                            (selectedCommunity == "Todos" || communitiesMap[it.community_id]?.equals(selectedCommunity, ignoreCase = true) == true) &&
+                            (selectedStatus == "Todos" || it.status.equals(selectedStatus, ignoreCase = true))
+                }
+            }
 
             when {
                 isLoading -> Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
@@ -168,12 +197,7 @@ fun ReportListRoute(
                     modifier = Modifier.fillMaxSize().padding(horizontal = 16.dp),
                     contentPadding = PaddingValues(bottom = 16.dp)
                 ) {
-                    val filteredReports = reports.filter {
-                        it.title.contains(searchText, ignoreCase = true) &&
-                                (selectedType == "Todos" || typesMap[it.type_id].equals(selectedType, ignoreCase = true)) &&
-                                (selectedCommunity == "Todos" || communitiesMap[it.community_id].equals(selectedCommunity, ignoreCase = true)) &&
-                                (selectedStatus == "Todos" || it.status.equals(selectedStatus, ignoreCase = true))
-                    }
+
 
                     items(filteredReports, key = { it.id }) { report ->
                         val communityName = communitiesMap[report.community_id] ?: "Desconocido"
@@ -203,10 +227,10 @@ fun ReportFilters(
     selectedType: String,
     onCommunityChange: (String) -> Unit,
     onStatusChange: (String) -> Unit,
-    onTypeChange: (String) -> Unit
+    onTypeChange: (String) -> Unit,
+    communityOptions: List<String>,
+    typeOptions: List<String>
 ) {
-    val communityOptions = listOf("Todos", "Lagunilla", "Barrio Centro", "Santo Domingo")
-    val typeOptions = listOf("Todos", "Agresión", "Acoso", "Robo", "Urto", "Amenaza", "Ruido")
     val statusOptions = listOf("Todos", "pending", "approved", "rejected")
 
     var communityExpanded by remember { mutableStateOf(false) }
