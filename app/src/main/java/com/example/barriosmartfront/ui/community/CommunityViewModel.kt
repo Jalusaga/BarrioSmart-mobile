@@ -28,7 +28,9 @@ class CommunityViewModel(
     private val _community = MutableStateFlow<CommunityResponse?>(null)
     val community: StateFlow<CommunityResponse?> = _community
 
-
+    // 👇 NUEVO: ids de comunidades a las que el usuario YA está unido
+    private val _joinedCommunities = MutableStateFlow<Set<Int>>(emptySet())
+    val joinedCommunities: StateFlow<Set<Int>> = _joinedCommunities
     private val _members = MutableStateFlow<List<Member>>(emptyList())
     val members: StateFlow<List<Member>> = _members
 
@@ -37,8 +39,13 @@ class CommunityViewModel(
             _loading.value = true
             _error.value = null
             try {
-                val data = repository.getAll()
-                _communities.value = data ?: emptyList()
+                // 1. cargar comunidades
+                val list = repository.getAll() ?: emptyList()
+                _communities.value = list
+
+                // 2. cargar memberships del usuario actual
+                val joinedIds = repository.getJoinedCommunityIdsForCurrentUser()
+                _joinedCommunities.value = joinedIds
             } catch (e: Exception) {
                 _error.value = e.message
             } finally {
@@ -70,4 +77,18 @@ class CommunityViewModel(
             }
         }
     }
+    fun joinCommunity(communityId: Int) {
+        viewModelScope.launch {
+            try {
+                val ok = repository.joinCommunity(communityId)
+                if (ok) {
+                    // Agregamos el ID a la lista de unidas para deshabilitar el botón
+                    _joinedCommunities.value = _joinedCommunities.value + communityId
+                }
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }
+    }
+
 }

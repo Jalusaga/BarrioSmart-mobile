@@ -67,6 +67,7 @@ class CommunityActivity : ComponentActivity() {
 @Composable
 fun CommunityCard(
     community: CommunityResponse,
+    isJoined: Boolean,
     onViewDetails: (Int) -> Unit,
     onJoin: (Int) -> Unit
 ) {
@@ -127,13 +128,17 @@ fun CommunityCard(
                 // Unirse (siempre unirse por ahora)
                 Button(
                     onClick = { onJoin(community.id) },
+                    enabled = !isJoined,  // 👈 deshabilitado si ya está unido
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = MaterialTheme.colorScheme.primary,
+                        containerColor = if (isJoined)
+                            MaterialTheme.colorScheme.secondary
+                        else
+                            MaterialTheme.colorScheme.primary,
                         contentColor = Color.White
                     ),
                     modifier = Modifier.weight(1f)
                 ) {
-                    Text("Unirse")
+                    Text(if (isJoined) "Unido" else "Unirse")  // 👈 texto cambia
                 }
             }
         }
@@ -157,6 +162,7 @@ fun CommunityRoute(
     val communities by viewModel.communities.collectAsState()
     val isLoading by viewModel.loading.collectAsState()
     val error by viewModel.error.collectAsState()
+    val joinedCommunities by viewModel.joinedCommunities.collectAsState()
 
     // 🔁 Cargar comunidades al iniciar
     LaunchedEffect(Unit) {
@@ -209,12 +215,13 @@ fun CommunityRoute(
                 else -> {
                     LazyColumn(modifier = Modifier.fillMaxSize()) {
                         items(communities) { community ->
+                            val isJoined = joinedCommunities.contains(community.id)
                             CommunityCard(
                                 community = community,
+                                isJoined = isJoined,
                                 onViewDetails = navigateToDetails,
                                 onJoin = { id ->
-                                    // llamar al ViewModel para unirse a la comunidad
-                                    // viewModel.joinCommunity(id)
+                                    viewModel.joinCommunity(id)
                                 }
                             )
                         }

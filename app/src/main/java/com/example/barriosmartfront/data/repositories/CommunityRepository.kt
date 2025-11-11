@@ -3,12 +3,13 @@ package com.example.barriosmartfront.data.repositories
 
 import android.util.Log
 import com.example.barriosmartfront.data.auth.ITokenStore
+import com.example.barriosmartfront.data.auth.SessionManager
 import com.example.barriosmartfront.data.dto.community.Community
 import com.example.barriosmartfront.data.dto.community.CommunityCreate
+import com.example.barriosmartfront.data.dto.community.CommunityMemberCreate
 import com.example.barriosmartfront.data.dto.community.CommunityResponse
 import com.example.barriosmartfront.data.dto.community.CommunityUpdate
 import com.example.barriosmartfront.data.dto.member.Member
-import com.example.barriosmartfront.data.dto.report.Report
 import com.example.barriosmartfront.data.dto.report.ReportResponse
 import com.example.barriosmartfront.data.remote.ApiClient
 import com.example.barriosmartfront.data.remote.CommunityApi
@@ -106,5 +107,52 @@ class CommunityRepository(
             Log.e("CommunityRepository", "Error al obtener detalles de comunidad", e)
             null
         }
+    }
+
+    suspend fun joinCommunity(communityId: Int): Boolean {
+
+        val userId = SessionManager.userId() ?: run {
+            Log.e("CommunityRepository", "No hay usuario en sesión (userId es null)")
+            return false
+        }
+
+        if (userId == 0L) {
+            Log.e("CommunityRepository", "UserId inválido: $userId. ¿Usuario no logueado?")
+            return false
+        }
+
+        val body = CommunityMemberCreate(
+            user_id = userId,
+            community_id = communityId
+        )
+
+        val res = api.addMembership(body)
+
+        return if (res.isSuccessful) {
+            Log.d("CommunityRepository", "✅ Usuario $userId se unió a comunidad $communityId")
+            true
+        } else {
+            Log.e(
+                "CommunityRepository",
+                "❌ Error al unirse a comunidad $communityId: ${res.code()} ${res.message()}"
+            )
+            false
+        }
+    }
+
+    suspend fun getJoinedCommunityIdsForCurrentUser(): Set<Int> {
+        val userId = SessionManager.userId() ?: return emptySet()
+
+        val res = api.getAllMemberships()
+        if (!res.isSuccessful) {
+            android.util.Log.e("CommunityRepository", "❌ Error al obtener memberships: ${res.code()} ${res.message()}")
+            return emptySet()
+        }
+
+        val memberships = res.body().orEmpty()
+        return memberships
+            .filter { it.user_id == userId }
+            .map { it.community_id }
+            .toSet()
     }
 }
