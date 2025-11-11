@@ -15,7 +15,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material3.Button
@@ -158,6 +157,9 @@ fun NewReportRoute(
     // Collectar Flows
     val communities by communityViewModel.communities.collectAsState()
     val reportTypes by reportTypeViewModel.reportTypes.collectAsState()
+    val joinedCommunities by communityViewModel.joinedCommunities.collectAsState()
+    val filteredCommunities = communities.filter { it.id in joinedCommunities }
+
 
 
     Scaffold(
@@ -178,7 +180,7 @@ fun NewReportRoute(
                     Button(
                         onClick = {
                             val typeId = reportTypes.find { it.display_name == selectedIncidentType }?.id ?: 0
-                            val communityId = communities.find { it.name == selectedCommunity }?.id ?: 0
+                            val communityId = filteredCommunities.find { it.name == selectedCommunity }?.id ?: 0
 
                             val occurredAtIso = runCatching {
                                 LocalDateTime.parse(
@@ -304,7 +306,7 @@ fun NewReportRoute(
             // Comunidad
             DropdownSelector(
                 label = "Comunidad",
-                options = communities.map { it.name },
+                options = filteredCommunities.map { it.name },
                 selectedValue = selectedCommunity,
                 onValueSelected = { selectedCommunity = it }
             )
