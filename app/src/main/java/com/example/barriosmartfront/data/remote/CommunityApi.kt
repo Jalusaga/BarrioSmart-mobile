@@ -3,6 +3,8 @@ package com.example.barriosmartfront.data.remote
 
 import com.example.barriosmartfront.data.dto.community.Community
 import com.example.barriosmartfront.data.dto.community.CommunityCreate
+import com.example.barriosmartfront.data.dto.community.CommunityMemberCreate
+import com.example.barriosmartfront.data.dto.community.CommunityMemberResponse
 import com.example.barriosmartfront.data.dto.community.CommunityResponse
 import com.example.barriosmartfront.data.dto.community.CommunityUpdate
 import com.example.barriosmartfront.data.dto.member.Member
@@ -34,4 +36,11 @@ interface CommunityApi {
     @GET("reports/community/{community_id}")
     suspend fun getReports(@Path("community_id") communityId: Int): Response<List<ReportResponse>>
 
+    @POST("community-members")
+    suspend fun addMembership(
+        @Body body: CommunityMemberCreate
+    ): retrofit2.Response<Unit>
+
+    @GET("community-members")
+    suspend fun getAllMemberships(): retrofit2.Response<List<CommunityMemberResponse>>
 }
