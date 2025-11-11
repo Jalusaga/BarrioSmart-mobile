@@ -50,7 +50,7 @@ class AuthoritiesActivity : ComponentActivity() {
             ),
             Authority(
                 title = "Bomberos",
-                phone = "2528-0000",
+                phone = "2547-3700",
                 description = "Incendios, rescates y emergencias con materiales peligrosos",
                 availability = "Disponible 24/7",
                 backgroundColor = Color(0xFFFBE9E7), // Rosa pálido
