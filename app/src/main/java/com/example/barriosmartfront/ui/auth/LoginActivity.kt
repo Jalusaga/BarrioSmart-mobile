@@ -243,11 +243,6 @@ fun LoginRoute(
                             )
                         }, modifier = Modifier.align(Alignment.CenterHorizontally)
                     ) { Text("¿No tienes cuenta? Regístrate") }
-
-                    TextButton(
-                        onClick = { /* TODO: recuperación */ },
-                        modifier = Modifier.align(Alignment.CenterHorizontally)
-                    ) { Text("¿Olvidaste tu contraseña?") }
                 }
             }
 
@@ -255,7 +250,14 @@ fun LoginRoute(
 
             // Pie con tono informativo, similar a tus pantallas
             AssistChip(
-                onClick = { /* tips de seguridad */ },
+                onClick = {
+                    context.startActivity(
+                        android.content.Intent(
+                            context,
+                            com.example.barriosmartfront.ui.authorities.AuthoritiesActivity::class.java
+                        )
+                    )
+                },
                 label = { Text("Consejos de seguridad y contacto 911") },
                 leadingIcon = {
                     Icon(Icons.Default.Info, contentDescription = null)
